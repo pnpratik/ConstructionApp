@@ -7,22 +7,15 @@ const Project = require('../models/Project');
 const Vendor = require('../models/Vendor');
 const Contractor = require('../models/Contractor');
 
-const connectDB = async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/constructionapp');
-  console.log('✅ Connected to MongoDB');
-};
+// ─── Exported function: uses existing Mongoose connection ─────────────────────
+const seedData = async () => {
+  const count = await User.countDocuments();
+  if (count > 0) {
+    console.log('ℹ️  Demo data already present, skipping seed');
+    return;
+  }
 
-const seed = async () => {
-  await connectDB();
-
-  // Clear existing data
-  await Promise.all([
-    User.deleteMany({}),
-    Project.deleteMany({}),
-    Vendor.deleteMany({}),
-    Contractor.deleteMany({})
-  ]);
-  console.log('🗑️  Cleared existing data');
+  console.log('🌱 Seeding demo data...');
 
   const password = 'demo1234';
 
@@ -132,38 +125,61 @@ const seed = async () => {
     { user: findUser('civil@demo.com')?._id,      type: 'civil',      company: 'Dinesh Construction',     license: 'GJ-CIV-2022-001', experience: 15, projects: [project._id] },
     { user: findUser('plumbing@demo.com')?._id,   type: 'plumbing',   company: 'Haresh Plumbing Works',   license: 'GJ-PLB-2022-002', experience: 10, projects: [project._id] },
     { user: findUser('color@demo.com')?._id,      type: 'color',      company: 'Rakesh Paint Works',      experience: 8  },
-    { user: findUser('lift@demo.com')?._id,       type: 'lift',       company: 'Nilesh Elevators',        license: 'GJ-LIFT-2023-001', experience: 12 },
+    { user: findUser('lift@demo.com')?._id,        type: 'lift',       company: 'Nilesh Elevators',        license: 'GJ-LIFT-2023-001', experience: 12 },
     { user: findUser('electric@demo.com')?._id,   type: 'electrical', company: 'Hitesh Electricals',      license: 'GJ-ELC-2022-003', experience: 11, projects: [project._id] },
-    { user: findUser('tile@demo.com')?._id,       type: 'tile',       company: 'Jitesh Tile Works',       experience: 7,  projects: [project._id] },
-    { user: findUser('acp@demo.com')?._id,        type: 'acp',        company: 'Manish ACP Solutions',    experience: 9  },
+    { user: findUser('tile@demo.com')?._id,        type: 'tile',       company: 'Jitesh Tile Works',       experience: 7,  projects: [project._id] },
+    { user: findUser('acp@demo.com')?._id,         type: 'acp',        company: 'Manish ACP Solutions',    experience: 9  },
     { user: findUser('aluminium@demo.com')?._id,  type: 'aluminium',  company: 'Kamlesh Aluminium Works', experience: 13 },
     { user: findUser('doorlock@demo.com')?._id,   type: 'door_lock',  company: 'Vipul Door & Hardware',   experience: 6  },
   ]);
   console.log(`👷 Created ${contractors.length} contractors`);
 
-  console.log('\n🎉 Seed completed!\n');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Demo Login Credentials (password: demo1234)');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Chairperson  : chairperson@demo.com');
-  console.log('Director     : director@demo.com');
-  console.log('Builder      : builder@demo.com');
-  console.log('Site Engineer: engineer@demo.com');
-  console.log('Civil Cont.  : civil@demo.com');
-  console.log('Plumbing     : plumbing@demo.com');
-  console.log('Color        : color@demo.com');
-  console.log('Lift         : lift@demo.com');
-  console.log('Electric     : electric@demo.com');
-  console.log('Tile         : tile@demo.com');
-  console.log('ACP          : acp@demo.com');
-  console.log('Aluminium    : aluminium@demo.com');
-  console.log('Door & Lock  : doorlock@demo.com');
-  console.log('Vendor       : vendor@demo.com');
-  console.log('Delivery Op. : delivery@demo.com');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-  await mongoose.disconnect();
-  process.exit(0);
+  console.log('✅ Demo data seeded successfully!');
 };
 
-seed().catch(err => { console.error('❌ Seed error:', err); process.exit(1); });
+module.exports = { seedData };
+
+// ─── Standalone runner (npm run seed) ─────────────────────────────────────────
+if (require.main === module) {
+  const connectDB = async () => {
+    let uri = process.env.MONGO_URI || 'mongodb://localhost:27017/constructionapp';
+    if (!uri || uri.includes('localhost')) {
+      try {
+        const { MongoMemoryServer } = require('mongodb-memory-server');
+        const mongod = await MongoMemoryServer.create();
+        uri = mongod.getUri();
+        console.log('⚡ Using in-memory MongoDB');
+      } catch {}
+    }
+    await mongoose.connect(uri);
+    console.log('✅ Connected to MongoDB');
+  };
+
+  const run = async () => {
+    await connectDB();
+    // Clear for standalone run
+    await Promise.all([
+      User.deleteMany({}),
+      Project.deleteMany({}),
+      Vendor.deleteMany({}),
+      Contractor.deleteMany({})
+    ]);
+    await seedData();
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Demo Login Credentials (password: demo1234)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Chairperson  : chairperson@demo.com');
+    console.log('Director     : director@demo.com');
+    console.log('Builder      : builder@demo.com');
+    console.log('Site Engineer: engineer@demo.com');
+    console.log('Civil Cont.  : civil@demo.com');
+    console.log('Tile         : tile@demo.com');
+    console.log('Vendor       : vendor@demo.com');
+    console.log('Delivery Op. : delivery@demo.com');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    await mongoose.disconnect();
+    process.exit(0);
+  };
+
+  run().catch(err => { console.error('❌ Seed error:', err); process.exit(1); });
+}
