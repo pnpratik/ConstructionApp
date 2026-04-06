@@ -5,6 +5,7 @@ const Order = require('../models/Order');
 const Vendor = require('../models/Vendor');
 const Contractor = require('../models/Contractor');
 const Notification = require('../models/Notification');
+const Attendance = require('../models/Attendance');
 const { protect } = require('../middleware/auth');
 
 router.use(protect);
@@ -47,16 +48,24 @@ router.get('/stats', async (req, res) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
 
+    // Today's attendance – only contractors with workers present
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const attendance = await Attendance.find({ date: todayStr, presentCount: { $gt: 0 } })
+      .sort('-presentCount');
+    const totalWorkersPresent = attendance.reduce((s, r) => s + r.presentCount, 0);
+
     res.json({
       success: true,
       stats: {
         totalProjects, activeProjects,
         totalOrders, pendingOrders, deliveredOrders,
-        totalVendors, totalContractors
+        totalVendors, totalContractors,
+        totalWorkersPresent,
       },
       ordersByStatus,
       monthlyOrders,
-      recentOrders
+      recentOrders,
+      attendance,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

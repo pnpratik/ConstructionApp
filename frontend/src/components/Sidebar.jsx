@@ -95,6 +95,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         {/* Deliveries */}
         <NavItem to="/deliveries" icon={Truck} label="Deliveries" />
 
+        {/* Attendance – visible to contractors and admins */}
+        {(user?.role?.includes('contractor') || ['director','site_engineer','builder','chairperson'].includes(user?.role)) && (
+          <NavItem to="/attendance" icon={HardHat} label="Attendance" />
+        )}
+
         {/* Notifications */}
         <NavItem to="/notifications" icon={Bell} label="Notifications" badge={unreadCount} />
 
