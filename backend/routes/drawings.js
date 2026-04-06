@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const Drawing = require('../models/Drawing');
 const MaterialRequirement = require('../models/MaterialRequirement');
 const { protect, authorize } = require('../middleware/auth');
 const { uploadDrawing } = require('../middleware/upload');
 const { calculateMaterials } = require('../utils/materialCalculator');
+const { analyzeDrawingFile } = require('../utils/dwgAnalyzer');
 
 router.use(protect);
 
@@ -53,6 +55,40 @@ router.get('/:id', async (req, res) => {
       .populate('approvedBy', 'name');
     if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
     res.json({ success: true, drawing });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/drawings/:id/analyze - Auto-extract quantities from DWG/DXF file
+router.post('/:id/analyze', async (req, res) => {
+  try {
+    const drawing = await Drawing.findById(req.params.id);
+    if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
+
+    // Resolve absolute path of the uploaded file
+    const uploadsDir = path.join(__dirname, '..', 'uploads', 'drawings');
+    const fileName = path.basename(drawing.fileUrl || '');
+    const filePath = path.join(uploadsDir, fileName);
+
+    const analysis = await analyzeDrawingFile(filePath, drawing.type);
+
+    // Save extracted inputs back to the drawing for reference
+    if (analysis.inputs && Object.keys(analysis.inputs).length > 0) {
+      drawing.inputs = analysis.inputs;
+      await drawing.save();
+    }
+
+    res.json({
+      success: true,
+      analysis: {
+        format: analysis.format,
+        confidence: analysis.confidence,
+        inputs: analysis.inputs,
+        details: analysis.details,
+        error: analysis.error || null,
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
