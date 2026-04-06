@@ -40,11 +40,31 @@ const fileFilter = (allowedTypes) => (req, file, cb) => {
   else cb(new Error(`Only ${allowedTypes.join(', ')} files are allowed`), false);
 };
 
-// Drawing upload (PDF, DWG, PNG, JPG)
+// Storage for project images
+const projectStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '../uploads/projects');
+    ensureDir(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `project-${unique}${path.extname(file.originalname)}`);
+  }
+});
+
+// Drawing upload (PDF, DWG, PNG, JPG) — 30MB limit
 const uploadDrawing = multer({
   storage: drawingStorage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB
   fileFilter: fileFilter(['.pdf', '.dwg', '.png', '.jpg', '.jpeg', '.dxf'])
+});
+
+// Project image upload
+const uploadProjectImage = multer({
+  storage: projectStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: fileFilter(['.png', '.jpg', '.jpeg', '.webp'])
 });
 
 // Delivery upload (PDF, PNG, JPG)
@@ -54,4 +74,4 @@ const uploadDelivery = multer({
   fileFilter: fileFilter(['.pdf', '.png', '.jpg', '.jpeg'])
 });
 
-module.exports = { uploadDrawing, uploadDelivery };
+module.exports = { uploadDrawing, uploadDelivery, uploadProjectImage };

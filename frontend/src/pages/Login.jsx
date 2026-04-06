@@ -43,7 +43,7 @@ export default function Login() {
               <Building2 size={32} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">ConstructionApp</h1>
+              <h1 className="text-3xl font-bold">Nirmaan</h1>
               <p className="text-blue-200">Complete Project Management</p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function Login() {
         <div className="w-full max-w-md">
           <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
             <Building2 size={28} className="text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-800">ConstructionApp</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Nirmaan</h1>
           </div>
 
           <div className="card">

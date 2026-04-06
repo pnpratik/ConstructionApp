@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project');
 const { protect, authorize } = require('../middleware/auth');
+const { uploadProjectImage } = require('../middleware/upload');
 
-// All routes require authentication
 router.use(protect);
 
 // GET /api/projects
@@ -20,15 +20,21 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/projects
-router.post('/', authorize('director', 'builder', 'chairperson', 'admin'), async (req, res) => {
-  try {
-    const project = await Project.create({ ...req.body, createdBy: req.user._id });
-    res.status(201).json({ success: true, project });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+// POST /api/projects — supports optional image upload
+router.post('/',
+  authorize('director', 'builder', 'chairperson', 'admin'),
+  uploadProjectImage.single('image'),
+  async (req, res) => {
+    try {
+      const data = { ...req.body, createdBy: req.user._id };
+      if (req.file) data.imageUrl = `/uploads/projects/${req.file.filename}`;
+      const project = await Project.create(data);
+      res.status(201).json({ success: true, project });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
-});
+);
 
 // GET /api/projects/:id
 router.get('/:id', async (req, res) => {
@@ -44,16 +50,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/projects/:id
-router.put('/:id', authorize('director', 'builder', 'chairperson', 'admin'), async (req, res) => {
-  try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    res.json({ success: true, project });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+// PUT /api/projects/:id — supports optional image upload
+router.put('/:id',
+  authorize('director', 'builder', 'chairperson', 'admin'),
+  uploadProjectImage.single('image'),
+  async (req, res) => {
+    try {
+      const update = { ...req.body };
+      if (req.file) update.imageUrl = `/uploads/projects/${req.file.filename}`;
+      const project = await Project.findByIdAndUpdate(req.params.id, update, { new: true });
+      if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+      res.json({ success: true, project });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
-});
+);
 
 // DELETE /api/projects/:id (soft delete)
 router.delete('/:id', authorize('director', 'chairperson', 'admin'), async (req, res) => {

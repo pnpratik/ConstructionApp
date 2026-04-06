@@ -15,6 +15,7 @@ const projectSchema = new mongoose.Schema({
   assignedEngineers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   assignedContractors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  imageUrl: { type: String, default: '' },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

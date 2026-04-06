@@ -45,7 +45,7 @@ export default function Navbar() {
   return (
     <header className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-semibold text-gray-800">Construction Management System</h1>
+        <h1 className="text-lg font-semibold text-gray-800">Nirmaan</h1>
       </div>
 
       <div className="flex items-center gap-4">

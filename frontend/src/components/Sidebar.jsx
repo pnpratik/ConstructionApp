@@ -43,7 +43,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
               <Building2 size={18} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-sm leading-none">ConstructApp</p>
+              <p className="font-bold text-gray-900 text-sm leading-none">Nirmaan</p>
               <p className="text-xs text-gray-400">Management System</p>
             </div>
           </div>
