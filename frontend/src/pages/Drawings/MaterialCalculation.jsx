@@ -39,12 +39,12 @@ const InputField = ({ label, unit, value, onChange, help, confidence, autoFilled
 );
 
 // ─── Field definitions ─────────────────────────────────────────────────────────
+// Structural numeric inputs (masonry type + wall thickness are separate selects)
 const STRUCTURAL_INPUTS = [
-  { key: 'floorArea',      label: 'Floor Area per Floor', unit: 'sqft',   help: 'Built-up area of one floor' },
-  { key: 'floors',         label: 'Number of Floors',     unit: '',       help: 'Including ground floor' },
-  { key: 'wallLength',     label: 'Total Wall Length',    unit: 'meters', help: 'Combined length of all walls per floor' },
-  { key: 'wallHeight',     label: 'Wall Height',          unit: 'meters', help: 'Floor to ceiling height' },
-  { key: 'wallThickness',  label: 'Wall Thickness',       unit: 'inches', help: '4.5" (half brick) or 9" (full brick)' },
+  { key: 'floorArea',   label: 'Floor Area per Floor', unit: 'sqft',   help: 'Built-up area of one floor' },
+  { key: 'floors',      label: 'Number of Floors',     unit: '',       help: 'Including ground floor' },
+  { key: 'wallLength',  label: 'Total Wall Length',    unit: 'meters', help: 'Combined length of all walls per floor' },
+  { key: 'wallHeight',  label: 'Wall Height',          unit: 'meters', help: 'Floor to ceiling height (default 3m)' },
 ];
 const PLUMBING_INPUTS = [
   { key: 'coldWaterPipeRuns', label: 'Cold Water Pipe Run', unit: 'meters' },
@@ -307,6 +307,58 @@ export default function MaterialCalculation() {
                   onChange={e => setInputs({ ...inputs, [field.key]: parseFloat(e.target.value) || 0 })}
                 />
               ))}
+
+              {/* Masonry selects — only for structural / architectural drawings */}
+              {drawing && ['structural', 'architectural'].includes(drawing.type) && (
+                <>
+                  {/* Masonry Type */}
+                  <div>
+                    <label className="label mb-1">Masonry Type</label>
+                    <div className="flex gap-2">
+                      {[
+                        { val: 'brick', label: '🧱 Brick',  sub: 'Clay / Fly Ash' },
+                        { val: 'block', label: '🟫 Block',  sub: 'AAC / Concrete' },
+                      ].map(opt => (
+                        <button key={opt.val} type="button"
+                          onClick={() => setInputs(p => ({ ...p, masonryType: opt.val }))}
+                          className={`flex-1 py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all text-left ${
+                            (inputs.masonryType || 'brick') === opt.val
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {opt.label}
+                          <span className="block text-xs font-normal mt-0.5 opacity-60">{opt.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Wall Thickness */}
+                  <div>
+                    <label className="label mb-1">Wall Thickness</label>
+                    <div className="flex gap-2">
+                      {[
+                        { val: 3, label: '3"',  sub: 'Skin/Partition' },
+                        { val: 4, label: '4"',  sub: 'Half Brick' },
+                        { val: 9, label: '9"',  sub: 'Full Brick' },
+                      ].map(opt => (
+                        <button key={opt.val} type="button"
+                          onClick={() => setInputs(p => ({ ...p, wallThickness: opt.val }))}
+                          className={`flex-1 py-2.5 px-2 rounded-xl border-2 text-sm font-bold transition-all ${
+                            (inputs.wallThickness ?? 9) === opt.val
+                              ? 'border-orange-500 bg-orange-50 text-orange-700'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {opt.label}
+                          <span className="block text-xs font-normal mt-0.5 opacity-60">{opt.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
