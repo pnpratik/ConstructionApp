@@ -36,7 +36,15 @@ export default function DrawingUpload() {
 
     try {
       const res = await api.post('/drawings', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success('Drawing uploaded successfully!');
+      const conf = res.data.analysisConfidence;
+      toast.success(
+        res.data.isRevision
+          ? `Rev ${res.data.revision} uploaded & analyzed!`
+          : conf === 'high'
+            ? '✅ Drawing analyzed — materials extracted!'
+            : '📐 Drawing uploaded & analyzed — please review quantities',
+        { duration: 4000 }
+      );
       navigate(`/drawings/${res.data.drawing._id}/calculate`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Upload failed');
@@ -51,7 +59,7 @@ export default function DrawingUpload() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><ArrowLeft size={20} /></button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Upload Drawing</h1>
-          <p className="text-gray-500">Upload architectural, structural, plumbing, or electrical drawings</p>
+          <p className="text-gray-500">Upload once — materials are extracted and saved automatically</p>
         </div>
       </div>
 
