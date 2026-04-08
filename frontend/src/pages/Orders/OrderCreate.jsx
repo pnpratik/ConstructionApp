@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, ArrowLeft, ShoppingCart, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, ShoppingCart, ChevronDown, ScanLine, PenLine, LayoutList, Camera, X, CheckCircle } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -25,252 +25,359 @@ const CATEGORY_LABELS = {
 // ─── Category → material name suggestions ────────────────────────────────────
 const CATEGORY_MATERIALS = {
   steel: [
-    'TMT Steel Bar – 6mm (Stirrups)',
-    'TMT Steel Bar – 8mm',
-    'TMT Steel Bar – 12mm',
-    'TMT Steel Bar – 16mm',
-    'TMT Steel Bar – 20mm',
-    'TMT Steel Bar – 25mm',
-    'TMT Steel Bar – 32mm',
-    'Binding Wire 16 Gauge',
-    'MS Flat Bar',
-    'MS Angle',
-    'MS Channel',
+    'TMT Steel Bar – 6mm (Stirrups)', 'TMT Steel Bar – 8mm', 'TMT Steel Bar – 12mm',
+    'TMT Steel Bar – 16mm', 'TMT Steel Bar – 20mm', 'TMT Steel Bar – 25mm',
+    'TMT Steel Bar – 32mm', 'Binding Wire 16 Gauge', 'MS Flat Bar', 'MS Angle', 'MS Channel',
   ],
   brick_block: [
-    'Bricks – 3" / 75mm (Partition)',
-    'Bricks – 4" / 100mm (Half Brick)',
-    'Bricks – 9" / 230mm (Full Brick)',
-    'Fly Ash Bricks',
-    'AAC Block – 4" (600×100×200mm)',
-    'AAC Block – 8" (600×200×200mm)',
-    'Hollow Concrete Block – 6"',
-    'Solid Concrete Block – 4"',
+    'Bricks – 3" / 75mm (Partition)', 'Bricks – 4" / 100mm (Half Brick)',
+    'Bricks – 9" / 230mm (Full Brick)', 'Fly Ash Bricks',
+    'AAC Block – 4" (600×100×200mm)', 'AAC Block – 8" (600×200×200mm)',
+    'Hollow Concrete Block – 6"', 'Solid Concrete Block – 4"',
   ],
   concrete_rmc: [
-    'Ready Mix Concrete – M20',
-    'Ready Mix Concrete – M25',
-    'Ready Mix Concrete – M30',
-    'Ready Mix Concrete – M35',
-    'Coarse Aggregate 20mm',
-    'Coarse Aggregate 12mm',
-    'River Sand / M-Sand',
+    'Ready Mix Concrete – M20', 'Ready Mix Concrete – M25', 'Ready Mix Concrete – M30',
+    'Ready Mix Concrete – M35', 'Coarse Aggregate 20mm', 'Coarse Aggregate 12mm', 'River Sand / M-Sand',
   ],
   cement: [
-    'Cement – OPC 53 Grade (50 kg bag)',
-    'Cement – OPC 43 Grade (50 kg bag)',
-    'Cement – PPC (50 kg bag)',
-    'White Cement',
-    'Block Jointing Mortar (Thin-bed)',
-    'Tile Adhesive (C2 Grade)',
-    'Grout (Unsanded)',
+    'Cement – OPC 53 Grade (50 kg bag)', 'Cement – PPC Grade (50 kg bag)',
+    'White Cement (40 kg bag)', 'Wall Putty (40 kg bag)', 'Tile Adhesive (20 kg bag)',
+    'Tile Grout (1 kg)', 'Rapid Set Cement', 'Waterproof Cement',
   ],
   plumbing_pipes_fittings: [
-    'CPVC Pipe – 20mm (Cold Water)',
-    'CPVC Pipe – 25mm (Hot Water)',
-    'CPVC Pipe – 32mm',
-    'CPVC Pipe – 40mm',
-    'uPVC Drain Pipe – 75mm',
-    'uPVC Drain Pipe – 110mm',
-    'uPVC Drain Pipe – 160mm',
-    'CPVC Fittings – 20mm (Elbow/Tee/Coupler)',
-    'CPVC Fittings – 25mm',
-    'uPVC Drain Fittings – 110mm',
-    'Gate Valve – 20mm',
-    'Ball Valve – 25mm',
-    'Check Valve',
-    'Water Storage Tank – 500L',
-    'Water Storage Tank – 1000L',
+    'CPVC Pipe – 1/2"', 'CPVC Pipe – 3/4"', 'CPVC Pipe – 1"', 'UPVC Pipe – 4" (Drainage)',
+    'UPVC Pipe – 6" (Main Drain)', 'PPR Pipe – 20mm', 'PPR Pipe – 25mm',
+    'GI Pipe – 1/2"', 'CPVC Elbow', 'CPVC Tee', 'Ball Valve – 1/2"', 'Ball Valve – 3/4"',
+    'P-Trap (4")', 'Floor Trap', 'Water Tank (500L)', 'Water Tank (1000L)',
   ],
   bath_fittings_ceramic: [
-    'Water Closet (WC) – Wall Hung',
-    'Water Closet (WC) – Floor Mount',
-    'Wash Basin – Table Top',
-    'Wash Basin – Wall Hung',
-    'Shower Set (Overhead + Hand)',
-    'Bathroom Faucet (Single Lever)',
-    'Basin Mixer Tap',
-    'Kitchen Sink – SS Single Bowl',
-    'Kitchen Sink – SS Double Bowl',
-    'Kitchen Tap',
-    'Soap Dish (CP)',
-    'Towel Rod – 24"',
-    'Towel Ring',
-    'Mirror Cabinet',
-    'Shower Enclosure',
-    'Floor Trap (SS)',
+    'EWC (Western Commode)', 'Indian WC', 'Wash Basin', 'Pedestal Wash Basin',
+    'Shower Panel', 'Overhead Shower', 'Hand Shower', 'Concealed Cistern',
+    'Flush Valve', 'CP Tap – 1/2"', 'CP Mixer – Single Lever', 'Bib Tap',
   ],
   electrical_cables: [
-    'FR Wire – 1.5 sqmm (Light/Fan)',
-    'FR Wire – 2.5 sqmm (Socket)',
-    'FR Wire – 4 sqmm (AC)',
-    'FR Wire – 6 sqmm',
-    'FR Wire – 10 sqmm',
-    'Earth Wire – 1.5 sqmm (Green/Yellow)',
-    'Earth Wire – 4 sqmm',
-    'Armoured Cable – 16mm',
-    'Armoured Cable – 25mm',
-    'PVC Conduit Pipe – 20mm',
-    'PVC Conduit Pipe – 25mm',
-    'Conduit Junction Box',
-    'Conduit Bend / Elbow',
+    'FR Wire – 1 sqmm (White)', 'FR Wire – 1.5 sqmm (Red)', 'FR Wire – 2.5 sqmm (Yellow)',
+    'FR Wire – 4 sqmm (Blue)', 'FR Wire – 6 sqmm (Green)', 'Armoured Cable – 4C×10mm',
+    'Conduit Pipe – 25mm (PVC)', 'Conduit Pipe – 32mm (PVC)', 'Flex Wire – 1.5 sqmm',
   ],
   electrical_accessories: [
-    'MCB – 6A Single Pole',
-    'MCB – 16A Single Pole',
-    'MCB – 20A Single Pole',
-    'MCB – 32A Double Pole',
-    'MCB – 63A Double Pole',
-    'MCB Distribution Board – 8-way',
-    'MCB Distribution Board – 12-way',
-    'MCB Distribution Board – 16-way',
-    'RCCB – 40A/30mA',
-    'Modular Switch – 1-way',
-    'Modular Switch – 2-way',
-    'Modular 5A Socket',
-    'Modular 15A Socket',
-    'AC Socket – 25A',
-    'Fan Regulator (Electronic)',
-    'Exhaust Fan – 6"',
-    'Smoke Detector',
-    'Switch Plate (6-module)',
-    'Switch Plate (8-module)',
+    'MCB – 6A SP', 'MCB – 16A SP', 'MCB – 32A SP', 'MCB – 63A DP', 'RCCB – 40A 30mA',
+    'DB Box (4 Way)', 'DB Box (8 Way)', 'DB Box (12 Way)', 'Switch 6A', 'Switch 16A',
+    'Socket 6A', 'Socket 16A', 'Fan Regulator', 'Junction Box', 'Earthing Electrode',
   ],
   tiles_ceramic: [
-    'Vitrified Floor Tiles – 600×600mm',
-    'Vitrified Floor Tiles – 800×800mm',
-    'Vitrified Floor Tiles – 600×1200mm',
-    'Ceramic Wall Tiles – 300×450mm',
-    'Ceramic Wall Tiles – 300×600mm',
-    'Anti-Skid Tiles – 300×300mm',
-    'Parking Tiles – 400×400mm',
-    'Digital Tiles – 600×1200mm',
-    'Mosaic Tiles',
-    'Skirting Tiles',
-    'Step Riser Tiles',
-    'Tile Adhesive – C2 Grade',
-    'Tile Grout (Coloured)',
-    'Tile Spacers – 2mm',
-    'Tile Cutter Blade',
+    'Floor Tile – 600×600mm (Vitrified)', 'Floor Tile – 800×800mm (Vitrified)',
+    'Wall Tile – 300×600mm (Ceramic)', 'Wall Tile – 300×450mm (Ceramic)',
+    'Parking Tile – 600×600mm', 'Outdoor Tile – 300×300mm (Anti-Skid)',
+    'Bathroom Floor Tile – 300×300mm', 'Step Tile', 'Skirting Tile – 100×600mm',
+    'Designer Wall Tile', 'Mosaic Tile', 'Wooden Finish Tile',
+    'High Gloss Tile', 'Matt Finish Tile', 'Tile Spacer (2mm)',
   ],
   acp_panels: [
-    'ACP Sheet – 4mm PE Core',
-    'ACP Sheet – 4mm FR Core',
-    'ACP Sheet – 6mm FR Core',
-    'ACP Extrusion – F-Profile',
-    'ACP Extrusion – L-Angle',
-    'ACP Extrusion – T-Profile',
-    'ACP Corner Cap',
-    'Silicone Sealant (Neutral)',
-    'Rivet – SS 4mm',
+    'ACP Sheet – 4mm (Standard)', 'ACP Sheet – 6mm (Fire Retardant)',
+    'ACP Cladding – Silver', 'ACP Cladding – Gold', 'ACP Cladding – Custom Colour',
+    'ACP Fabrication Frame (GI)', 'ACP Corner Cap',
   ],
   aluminium_glass: [
-    'Aluminium Sliding Window (2-track)',
-    'Aluminium Sliding Window (3-track)',
-    'Aluminium Casement Window',
-    'Aluminium Sliding Door',
-    'Aluminium Door Frame',
-    'Aluminium Partition System',
-    'Float Glass – 5mm',
-    'Float Glass – 8mm',
-    'Toughened Glass – 10mm',
-    'Toughened Glass – 12mm',
-    'Reflective Glass',
-    'Structural Sealant',
-    'Spider Fitting (4-arm)',
-    'Aluminium Handle',
-    'Lock (Cremone)',
+    'Aluminium Section – 2" (Powder Coated)', 'Aluminium Section – 3"',
+    'Sliding Window Frame', 'Casement Window Frame', 'Sliding Door Frame',
+    'Float Glass – 5mm', 'Float Glass – 8mm', 'Toughened Glass – 10mm',
+    'Reflective Glass', 'Window Mesh (Fibre)', 'Silicon Sealant',
   ],
   doors_locks: [
-    'Flush Door – Solid Core (900×2100mm)',
-    'Flush Door – Solid Core (1200×2100mm)',
-    'Fire Door – 90 min',
-    'Wooden Door Frame – Teak',
-    'Wooden Door Frame – Sal',
-    'Main Door (Pre-hung)',
-    'Mortise Lock (Brass)',
-    'Cylindrical Lock (SS)',
-    'Deadbolt Lock',
-    'Door Closer (Heavy Duty)',
-    'Door Stopper (Floor)',
-    'Tower Bolt – 12"',
-    'Door Hinges – SS 4"',
-    'Door Hinges – SS 5" (Heavy)',
-    'Wardrobe Handle – 6"',
-    'Aldrop (SS)',
-    'Magic Eye / Peephole',
+    'Flush Door – 32mm (30×78")', 'Flush Door – 35mm (36×84")',
+    'Fibre Door', 'PVC Door (Bathroom)', 'Steel Door Frame',
+    'Wooden Door Frame', 'Mortise Lock', 'Cylindrical Lock', 'Pad Lock',
+    'Tower Bolt', 'Door Stopper', 'Hinges (SS 4")', 'Aldrop (SS)', 'Magic Eye / Peephole',
   ],
   paint_chemicals: [
-    'Interior Emulsion Paint (20L)',
-    'Exterior Weatherproof Paint (20L)',
-    'Primer – White (20L)',
-    'Putty – Wall (40 kg bag)',
-    'Enamel Paint – Gloss (4L)',
-    'Texture Coat (20 kg)',
-    'Waterproofing Chemical (5L)',
-    'Tile Cleaner (5L)',
-    'Wood Polish',
-    'Painting Brush Set',
-    'Paint Roller (9")',
+    'Interior Emulsion Paint (20L)', 'Exterior Weatherproof Paint (20L)',
+    'Primer – White (20L)', 'Putty – Wall (40 kg bag)', 'Enamel Paint – Gloss (4L)',
+    'Texture Coat (20 kg)', 'Waterproofing Chemical (5L)', 'Tile Cleaner (5L)',
+    'Wood Polish', 'Painting Brush Set', 'Paint Roller (9")',
   ],
   other: [],
 };
 
 const UNITS = ['kg', 'ton', 'nos', 'meter', 'sqft', 'sqm', 'cft', 'bag', 'liter', 'set', 'box', 'bundle', 'sheet', 'roll', 'pair', 'cum', 'rmt'];
-
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS);
-const emptyItem = { materialName: '', category: '', quantity: '', unit: '', estimatedCost: '' };
+const emptyItem = { materialName: '', category: '', quantity: '', unit: '', estimatedCost: '', mode: 'select' };
 
-// ─── Material name dropdown with suggestions ───────────────────────────────────
-function MaterialNameInput({ value, category, onChange }) {
-  const [open, setOpen]       = useState(false);
-  const [search, setSearch]   = useState(value);
-  const ref                   = useRef();
-  const suggestions           = CATEGORY_MATERIALS[category] || [];
-  const filtered              = search
+// ─── Mode toggle button ───────────────────────────────────────────────────────
+const ModeBtn = ({ active, onClick, icon: Icon, label, color }) => (
+  <button type="button" onClick={onClick}
+    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+      active
+        ? `bg-${color}-600 text-white border-${color}-600`
+        : `bg-white text-gray-500 border-gray-200 hover:border-${color}-300 hover:text-${color}-600`
+    }`}>
+    <Icon size={12} />{label}
+  </button>
+);
+
+// ─── Select-mode input: category dropdown + material autocomplete ─────────────
+function SelectModeRow({ item, i, availableCategories, updateItem, handleCategoryChange }) {
+  const [open, setOpen]     = useState(false);
+  const [search, setSearch] = useState(item.materialName);
+  const ref                 = useRef();
+  const suggestions         = CATEGORY_MATERIALS[item.category] || [];
+  const filtered            = search
     ? suggestions.filter(s => s.toLowerCase().includes(search.toLowerCase()))
     : suggestions;
 
-  useEffect(() => { setSearch(value); }, [value]);
+  useEffect(() => { setSearch(item.materialName); }, [item.materialName]);
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const pick = (name) => { onChange(name); setSearch(name); setOpen(false); };
+  const pick = (name) => { updateItem(i, 'materialName', name); setSearch(name); setOpen(false); };
 
   return (
-    <div ref={ref} className="relative">
-      <input
-        className="input text-sm"
-        required
-        placeholder={category ? 'Type or pick from list…' : 'Select category first'}
-        value={search}
-        onChange={e => { setSearch(e.target.value); onChange(e.target.value); setOpen(true); }}
-        onFocus={() => { if (category) setOpen(true); }}
-      />
-      {open && filtered.length > 0 && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-y-auto">
-          {filtered.map(s => (
-            <button key={s} type="button" onMouseDown={() => pick(s)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-50 last:border-0 truncate">
-              {s}
-            </button>
+    <div className="grid grid-cols-12 gap-3 items-end">
+      <div className="col-span-4">
+        {i === 0 && <label className="label text-xs mb-1">Category</label>}
+        <select
+          className={`input text-sm ${!item.category ? 'border-gray-200' : 'border-blue-300 bg-blue-50'}`}
+          value={item.category}
+          onChange={e => handleCategoryChange(i, e.target.value)}
+        >
+          <option value="">Select category…</option>
+          {availableCategories.map(c => (
+            <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>
           ))}
+        </select>
+      </div>
+      <div ref={ref} className="col-span-8 relative">
+        {i === 0 && <label className="label text-xs mb-1">Material Name *</label>}
+        <input
+          className="input text-sm" required
+          placeholder={item.category ? 'Type or pick from list…' : 'Select category first'}
+          value={search}
+          onChange={e => { setSearch(e.target.value); updateItem(i, 'materialName', e.target.value); setOpen(true); }}
+          onFocus={() => { if (item.category) setOpen(true); }}
+        />
+        {open && filtered.length > 0 && (
+          <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-y-auto">
+            {filtered.map(s => (
+              <button key={s} type="button" onMouseDown={() => pick(s)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-50 last:border-0 truncate">
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Manual-mode input: free text, optional category ─────────────────────────
+function ManualModeRow({ item, i, updateItem }) {
+  return (
+    <div className="grid grid-cols-12 gap-3 items-end">
+      <div className="col-span-5">
+        {i === 0 && <label className="label text-xs mb-1">Material Name *</label>}
+        <input
+          className="input text-sm border-orange-200 focus:border-orange-400" required
+          placeholder="Type material name freely…"
+          value={item.materialName}
+          onChange={e => updateItem(i, 'materialName', e.target.value)}
+        />
+      </div>
+      <div className="col-span-4">
+        {i === 0 && <label className="label text-xs mb-1">Material Code / HSN</label>}
+        <input
+          className="input text-sm font-mono"
+          placeholder="Code (optional)"
+          value={item.materialCode || ''}
+          onChange={e => updateItem(i, 'materialCode', e.target.value)}
+        />
+      </div>
+      <div className="col-span-3">
+        {i === 0 && <label className="label text-xs mb-1">Category</label>}
+        <select className="input text-sm" value={item.category}
+          onChange={e => updateItem(i, 'category', e.target.value)}>
+          <option value="">None</option>
+          {ALL_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+// ─── QR / Barcode Scanner Modal ───────────────────────────────────────────────
+function QRScannerModal({ onScan, onClose }) {
+  const scannerRef  = useRef(null);
+  const instanceRef = useRef(null);
+  const [error, setError]   = useState('');
+  const [scanned, setScanned] = useState(null);
+
+  useEffect(() => {
+    let scanner;
+    const init = async () => {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        scanner = new Html5Qrcode('qr-scanner-view');
+        instanceRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: 'environment' }, // rear camera
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            setScanned(decodedText);
+            scanner.stop().catch(() => {});
+          },
+          () => {}
+        );
+      } catch (err) {
+        setError('Camera not accessible. Use manual entry instead.');
+      }
+    };
+    init();
+    return () => {
+      if (instanceRef.current) {
+        instanceRef.current.stop().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Parse scanned text → material fields
+  const parseScan = (text) => {
+    // Try JSON first: {"materialName":"...","category":"...","unit":"...","quantity":...}
+    try {
+      const obj = JSON.parse(text);
+      if (obj.materialName) return obj;
+    } catch {}
+    // URL: extract meaningful part
+    if (text.startsWith('http')) {
+      const parts = text.split('/');
+      return { materialName: parts[parts.length - 1] || text };
+    }
+    // Plain text = material name
+    return { materialName: text };
+  };
+
+  const confirmScan = () => {
+    if (scanned) {
+      onScan(parseScan(scanned));
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl overflow-hidden w-full max-w-sm">
+        {/* Header */}
+        <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ScanLine size={18} className="text-green-400" />
+            <span className="font-semibold">Scan QR / Barcode</span>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded-lg"><X size={16} /></button>
+        </div>
+
+        {/* Camera view */}
+        {!scanned && !error && (
+          <>
+            <div id="qr-scanner-view" className="w-full" style={{ minHeight: 280 }} ref={scannerRef} />
+            <p className="text-center text-xs text-gray-500 py-2">Point camera at QR code or barcode</p>
+          </>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="p-6 text-center">
+            <Camera size={40} className="text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm mb-4">{error}</p>
+            {/* Fallback: manual type */}
+            <ManualScanInput onScan={(text) => { onScan(parseScan(text)); onClose(); }} />
+          </div>
+        )}
+
+        {/* Scanned result */}
+        {scanned && (
+          <div className="p-5 space-y-4">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle size={20} />
+              <span className="font-semibold">Scan successful!</span>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700 font-mono break-all">{scanned}</div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setScanned(null)}
+                className="btn-secondary flex-1 text-sm">Scan Again</button>
+              <button type="button" onClick={confirmScan}
+                className="btn-primary flex-1 text-sm">Use This</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Fallback text input inside scanner modal when camera unavailable
+function ManualScanInput({ onScan }) {
+  const [val, setVal] = useState('');
+  return (
+    <div className="flex gap-2">
+      <input className="input text-sm flex-1" placeholder="Type or paste barcode / code"
+        value={val} onChange={e => setVal(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && val.trim() && onScan(val.trim())} />
+      <button type="button" onClick={() => val.trim() && onScan(val.trim())}
+        className="btn-primary text-sm px-3">Add</button>
+    </div>
+  );
+}
+
+// ─── Scan-mode row: shows scanned value + re-scan button ─────────────────────
+function ScanModeRow({ item, i, updateItem }) {
+  const [showScanner, setShowScanner] = useState(!item.materialName);
+
+  const handleScan = (parsed) => {
+    updateItem(i, 'materialName', parsed.materialName || '');
+    if (parsed.category)  updateItem(i, 'category', parsed.category);
+    if (parsed.unit)      updateItem(i, 'unit', parsed.unit);
+    if (parsed.quantity)  updateItem(i, 'quantity', String(parsed.quantity));
+    setShowScanner(false);
+  };
+
+  return (
+    <>
+      {showScanner && <QRScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} />}
+      <div className="grid grid-cols-12 gap-3 items-end">
+        <div className="col-span-9">
+          {i === 0 && <label className="label text-xs mb-1">Scanned Material</label>}
+          <div className={`input text-sm flex items-center gap-2 cursor-pointer ${!item.materialName ? 'border-dashed border-green-300 text-gray-400' : 'border-green-300 bg-green-50 text-gray-800'}`}
+            onClick={() => setShowScanner(true)}>
+            <ScanLine size={14} className={item.materialName ? 'text-green-600' : 'text-gray-400'} />
+            {item.materialName || 'Tap to scan QR or barcode…'}
+          </div>
+        </div>
+        <div className="col-span-3">
+          <button type="button" onClick={() => setShowScanner(true)}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-xl text-xs font-medium hover:bg-green-700">
+            <ScanLine size={13} /> Scan
+          </button>
+        </div>
+      </div>
+      {item.materialName && item.category && (
+        <div className="text-xs text-green-700 flex items-center gap-1 mt-1">
+          <CheckCircle size={11} /> Category: {CATEGORY_LABELS[item.category] || item.category}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 export default function OrderCreate() {
-  const navigate     = useNavigate();
+  const navigate       = useNavigate();
   const [searchParams] = useSearchParams();
   const [projects, setProjects] = useState([]);
-  const [vendors, setVendors]   = useState([]);
+  const [vendors,  setVendors]  = useState([]);
   const [form, setForm] = useState({
     project:        searchParams.get('project') || '',
     vendor:         '',
@@ -278,25 +385,20 @@ export default function OrderCreate() {
     requiredByDate: '',
     remarks:        '',
   });
-  const [items, setItems]   = useState([{ ...emptyItem }]);
+  const [items,   setItems]   = useState([{ ...emptyItem }]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([api.get('/projects'), api.get('/vendors')]).then(([p, v]) => {
       setProjects(p.data.projects || []);
-      setVendors(v.data.vendors || []);
+      setVendors(v.data.vendors   || []);
     });
   }, []);
 
-  // ── Get the selected vendor object ──────────────────────────────────────────
-  const selectedVendor = vendors.find(v => v._id === form.vendor) || null;
-
-  // ── Available categories: filtered by vendor, or all if no vendor ──────────
+  const selectedVendor      = vendors.find(v => v._id === form.vendor) || null;
   const availableCategories = selectedVendor?.materialCategories?.length
-    ? selectedVendor.materialCategories
-    : ALL_CATEGORIES;
+    ? selectedVendor.materialCategories : ALL_CATEGORIES;
 
-  // ── When vendor changes, clear any item categories not in new vendor's list ─
   const handleVendorChange = (vendorId) => {
     const newVendor = vendors.find(v => v._id === vendorId);
     const allowed   = newVendor?.materialCategories || ALL_CATEGORIES;
@@ -311,8 +413,8 @@ export default function OrderCreate() {
   const addItem    = () => setItems([...items, { ...emptyItem }]);
   const removeItem = (i) => items.length > 1 && setItems(items.filter((_, idx) => idx !== i));
   const updateItem = (i, field, val) => setItems(items.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const setItemMode = (i, mode) => setItems(items.map((item, idx) => idx === i ? { ...item, mode, materialName: '', category: '' } : item));
 
-  // When category changes on an item, clear material name so user picks fresh
   const handleCategoryChange = (i, cat) => {
     setItems(items.map((item, idx) => idx === i ? { ...item, category: cat, materialName: '' } : item));
   };
@@ -322,7 +424,6 @@ export default function OrderCreate() {
     if (!form.project) return toast.error('Please select a project');
     const validItems = items.filter(i => i.materialName && i.quantity && i.unit);
     if (validItems.length === 0) return toast.error('Add at least one complete material item');
-
     setLoading(true);
     try {
       await api.post('/orders', { ...form, items: validItems });
@@ -336,6 +437,12 @@ export default function OrderCreate() {
   };
 
   const totalCost = items.reduce((sum, i) => sum + (parseFloat(i.estimatedCost) || 0), 0);
+
+  const MODE_TABS = [
+    { key: 'select', icon: LayoutList, label: 'Select',  color: 'blue',   desc: 'Pick from category list' },
+    { key: 'manual', icon: PenLine,    label: 'Manual',  color: 'orange', desc: 'Type freely / enter code' },
+    { key: 'scan',   icon: ScanLine,   label: 'Scan',    color: 'green',  desc: 'Scan QR or barcode' },
+  ];
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -417,73 +524,95 @@ export default function OrderCreate() {
             <button type="button" onClick={addItem} className="btn-secondary text-sm"><Plus size={14} /> Add Item</button>
           </div>
 
-          <div className="space-y-3">
-            {items.map((item, i) => (
-              <div key={i} className="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
-                {/* Row 1: Category + Material Name */}
-                <div className="grid grid-cols-12 gap-3 items-end">
-                  {/* Category */}
-                  <div className="col-span-4">
-                    {i === 0 && <label className="label text-xs mb-1">Category</label>}
-                    <select
-                      className={`input text-sm ${!item.category ? 'border-gray-200' : 'border-blue-300 bg-blue-50'}`}
-                      value={item.category}
-                      onChange={e => handleCategoryChange(i, e.target.value)}
-                    >
-                      <option value="">Select category…</option>
-                      {availableCategories.map(c => (
-                        <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Material Name — with autocomplete */}
-                  <div className="col-span-8">
-                    {i === 0 && <label className="label text-xs mb-1">Material Name *</label>}
-                    <MaterialNameInput
-                      value={item.materialName}
-                      category={item.category}
-                      onChange={val => updateItem(i, 'materialName', val)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Qty + Unit + Cost + Delete */}
-                <div className="grid grid-cols-12 gap-3 items-end">
-                  <div className="col-span-4">
-                    {i === 0 && <label className="label text-xs mb-1">Quantity *</label>}
-                    <input type="number" className="input text-sm" required min="0" step="any"
-                      value={item.quantity}
-                      onChange={e => updateItem(i, 'quantity', e.target.value)}
-                      placeholder="0" />
-                  </div>
-
-                  <div className="col-span-4">
-                    {i === 0 && <label className="label text-xs mb-1">Unit *</label>}
-                    <select className="input text-sm" required value={item.unit} onChange={e => updateItem(i, 'unit', e.target.value)}>
-                      <option value="">Unit…</option>
-                      {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="col-span-3">
-                    {i === 0 && <label className="label text-xs mb-1">Est. Cost (₹)</label>}
-                    <input type="number" className="input text-sm" min="0"
-                      value={item.estimatedCost}
-                      onChange={e => updateItem(i, 'estimatedCost', e.target.value)}
-                      placeholder="0" />
-                  </div>
-
-                  <div className="col-span-1 flex justify-center pb-1">
-                    <button type="button" onClick={() => removeItem(i)}
-                      disabled={items.length === 1}
-                      className="text-red-400 hover:text-red-600 disabled:opacity-30">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+          {/* Mode legend */}
+          <div className="flex items-center gap-4 text-xs text-gray-500 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-100">
+            <span className="font-medium text-gray-600">Entry mode per item:</span>
+            {MODE_TABS.map(m => (
+              <span key={m.key} className="flex items-center gap-1">
+                <m.icon size={11} className={`text-${m.color}-500`} />
+                <span className="font-medium">{m.label}</span> — {m.desc}
+              </span>
             ))}
+          </div>
+
+          <div className="space-y-3">
+            {items.map((item, i) => {
+              const mode = item.mode || 'select';
+              return (
+                <div key={i} className={`p-3 rounded-xl border space-y-3 ${
+                  mode === 'select' ? 'bg-blue-50/40 border-blue-100' :
+                  mode === 'manual' ? 'bg-orange-50/40 border-orange-100' :
+                  'bg-green-50/40 border-green-100'
+                }`}>
+                  {/* Mode toggle + item label */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Item {i + 1}</span>
+                    <div className="flex items-center gap-1.5">
+                      {MODE_TABS.map(m => {
+                        const colors = {
+                          blue:   mode === m.key ? 'bg-blue-600 text-white border-blue-600'   : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600',
+                          orange: mode === m.key ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-500 border-gray-200 hover:border-orange-300 hover:text-orange-600',
+                          green:  mode === m.key ? 'bg-green-600 text-white border-green-600'  : 'bg-white text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600',
+                        };
+                        return (
+                          <button key={m.key} type="button"
+                            onClick={() => setItemMode(i, m.key)}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${colors[m.color]}`}>
+                            <m.icon size={11} />{m.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Mode-specific name input */}
+                  {mode === 'select' && (
+                    <SelectModeRow item={item} i={i}
+                      availableCategories={availableCategories}
+                      updateItem={updateItem}
+                      handleCategoryChange={handleCategoryChange} />
+                  )}
+                  {mode === 'manual' && (
+                    <ManualModeRow item={item} i={i} updateItem={updateItem} />
+                  )}
+                  {mode === 'scan' && (
+                    <ScanModeRow item={item} i={i} updateItem={updateItem} />
+                  )}
+
+                  {/* Row: Qty + Unit + Cost + Delete */}
+                  <div className="grid grid-cols-12 gap-3 items-end">
+                    <div className="col-span-4">
+                      {i === 0 && <label className="label text-xs mb-1">Quantity *</label>}
+                      <input type="number" className="input text-sm" required min="0" step="any"
+                        value={item.quantity}
+                        onChange={e => updateItem(i, 'quantity', e.target.value)}
+                        placeholder="0" />
+                    </div>
+                    <div className="col-span-4">
+                      {i === 0 && <label className="label text-xs mb-1">Unit *</label>}
+                      <select className="input text-sm" required value={item.unit} onChange={e => updateItem(i, 'unit', e.target.value)}>
+                        <option value="">Unit…</option>
+                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <div className="col-span-3">
+                      {i === 0 && <label className="label text-xs mb-1">Est. Cost (₹)</label>}
+                      <input type="number" className="input text-sm" min="0"
+                        value={item.estimatedCost}
+                        onChange={e => updateItem(i, 'estimatedCost', e.target.value)}
+                        placeholder="0" />
+                    </div>
+                    <div className="col-span-1 flex justify-center pb-1">
+                      <button type="button" onClick={() => removeItem(i)}
+                        disabled={items.length === 1}
+                        className="text-red-400 hover:text-red-600 disabled:opacity-30">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {totalCost > 0 && (
