@@ -4,7 +4,9 @@ const Order = require('../models/Order');
 const MaterialRequirement = require('../models/MaterialRequirement');
 const { protect, canApprove, canRequest } = require('../middleware/auth');
 const { sendEmail, emailTemplates } = require('../utils/email');
-const { notifyApprovers, notifyOrderStatus, notifyDispatch, notifyDelivery } = require('../utils/notificationHelper');
+const { notifyApprovers, notifyOrderStatus, notifyDispatch, notifyDelivery, notifyVendorOrder } = require('../utils/notificationHelper');
+const { generateInvoicePDF } = require('../utils/invoiceGenerator');
+const QRCode = require('qrcode');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 
@@ -232,6 +234,42 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true, order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/orders/:id/invoice — Download GST PDF invoice
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('vendor',      'name address phone gst')
+      .populate('project',     'name location')
+      .populate('requestedBy', 'name');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    const pdfBuffer = await generateInvoicePDF(order);
+    res.set({
+      'Content-Type':        'application/pdf',
+      'Content-Disposition': `inline; filename="Invoice-${order.orderNumber}.pdf"`,
+      'Content-Length':      pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/orders/:id/qr — QR code for this order (PNG)
+router.get('/:id/qr', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).select('orderNumber status');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    const url    = `${process.env.CLIENT_URL || 'http://localhost:5173'}/orders/${order._id}`;
+    const qrPng  = await QRCode.toBuffer(url, { type: 'png', width: 300, margin: 2 });
+    res.set({ 'Content-Type': 'image/png' });
+    res.send(qrPng);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

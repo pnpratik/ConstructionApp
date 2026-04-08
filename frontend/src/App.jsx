@@ -28,6 +28,7 @@ import NotificationList from './pages/Notifications/NotificationList';
 import Reports from './pages/Reports/Reports';
 import MarkAttendance from './pages/Attendance/MarkAttendance';
 import StoreSettings from './pages/Settings/StoreSettings';
+import QRLabel from './pages/Deliveries/QRLabel';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -71,6 +72,7 @@ const AppRoutes = () => {
         <Route path="reports" element={<Reports />} />
         <Route path="attendance" element={<MarkAttendance />} />
         <Route path="settings/stores" element={<StoreSettings />} />
+        <Route path="deliveries/:id/qr-label" element={<QRLabel />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

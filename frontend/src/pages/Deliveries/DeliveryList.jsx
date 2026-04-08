@@ -134,6 +134,7 @@ export default function DeliveryList() {
                         {(d.photos||[]).length>0 && <a href={`${API_BASE}${d.photos[0]}`} target="_blank" rel="noreferrer" className="text-xs text-purple-600 hover:underline">🖼️ Photo</a>}
                         {d.storeSnapshot?.success && d.storeSnapshot?.url && <a href={`${API_BASE}${d.storeSnapshot.url}`} target="_blank" rel="noreferrer" className="text-xs text-green-600 hover:underline">📷 CCTV</a>}
                         {!d.isConfirmed && <Link to={`/deliveries/${d.order?._id}/upload`} className="text-xs text-orange-600 hover:underline">✍️ Sign</Link>}
+                        <Link to={`/deliveries/${d._id}/qr-label`} target="_blank" className="text-xs text-purple-600 hover:underline">🔲 QR Tag</Link>
                       </div>
                     </td>
                   </tr>

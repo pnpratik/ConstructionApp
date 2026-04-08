@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Truck, Package, Send, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Truck, Package, Send, Clock, FileText, QrCode } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -87,6 +87,18 @@ export default function OrderDetail() {
           {order.status === 'dispatched' && (
             <Link to={`/deliveries/${id}/upload`} className="btn-success"><Package size={16} /> Upload Delivery Challan</Link>
           )}
+          {/* GST Invoice — visible once order is delivered */}
+          {order.status === 'delivered' && (
+            <a href={`http://localhost:5001/api/orders/${id}/invoice`} target="_blank" rel="noreferrer"
+              className="btn-secondary flex items-center gap-1.5">
+              <FileText size={15} /> GST Invoice
+            </a>
+          )}
+          {/* QR Code — always visible */}
+          <a href={`http://localhost:5001/api/orders/${id}/qr`} target="_blank" rel="noreferrer"
+            className="btn-secondary flex items-center gap-1.5 text-purple-600 border-purple-200 hover:bg-purple-50">
+            <QrCode size={15} /> QR Code
+          </a>
         </div>
       </div>
 

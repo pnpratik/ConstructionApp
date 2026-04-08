@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Settings, NavLink, useNavigate } from 'react-router-dom';
-import { Settings,
+import { NavLink, useNavigate } from 'react-router-dom';
+import {
   LayoutDashboard, FolderOpen, FileImage, Package, ShoppingCart,
   Users, Truck, Bell, BarChart3, Building2, ChevronDown,
-  HardHat, Wrench, Zap, Layers, LogOut, ChevronLeft, ChevronRight
+  HardHat, Wrench, Zap, Layers, LogOut, ChevronLeft, ChevronRight, Settings,
 } from 'lucide-react';
-import { Settings, useAuth } from '../context/AuthContext';
-import { Settings, useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 
 const NavItem = ({ to, icon: Icon, label, badge }) => (
   <NavLink to={to} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>

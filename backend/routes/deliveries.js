@@ -7,6 +7,7 @@ const { protect } = require('../middleware/auth');
 const { uploadDelivery } = require('../middleware/upload');
 const { notifyDelivery }  = require('../utils/notificationHelper');
 const { saveSnapshot, findStoreForOrder } = require('../utils/cameraCapture');
+const QRCode = require('qrcode');
 
 router.use(protect);
 
@@ -136,6 +137,34 @@ router.get('/:id', async (req, res) => {
       .populate('receivedBy', 'name role');
     if (!delivery) return res.status(404).json({ success: false, message: 'Delivery not found' });
     res.json({ success: true, delivery });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/deliveries/:id/qr — Printable QR label (PNG)
+router.get('/:id/qr', async (req, res) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id)
+      .populate({ path: 'order', populate: [
+        { path: 'project', select: 'name' },
+        { path: 'vendor',  select: 'name' },
+      ]});
+    if (!delivery) return res.status(404).json({ success: false, message: 'Delivery not found' });
+
+    const url   = `${process.env.CLIENT_URL || 'http://localhost:5173'}/deliveries`;
+    const label = [
+      delivery.order?.orderNumber || 'ORDER',
+      delivery.order?.project?.name || '',
+      delivery.order?.vendor?.name  || '',
+      `Challan: ${delivery.challanNumber || 'N/A'}`,
+      new Date(delivery.deliveredAt).toLocaleDateString('en-IN'),
+    ].join(' | ');
+
+    // QR encodes the URL; label is metadata
+    const qrPng = await QRCode.toBuffer(url, { type: 'png', width: 300, margin: 2 });
+    res.set({ 'Content-Type': 'image/png', 'X-QR-Label': label });
+    res.send(qrPng);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
