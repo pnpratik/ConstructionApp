@@ -208,9 +208,9 @@ router.put('/:id/dispatch', async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     if (order.status !== 'accepted_by_vendor') return res.status(400).json({ success: false, message: 'Order must be accepted by vendor first' });
 
-    const { driverName, driverPhone, vehicleNumber, dispatchDate, estimatedArrival } = req.body;
+    const { driverName, driverPhone, vehicleNumber, dispatchDate, estimatedArrival, locationUrl } = req.body;
     order.status = 'dispatched';
-    order.dispatchDetails = { driverName, driverPhone, vehicleNumber, dispatchDate: dispatchDate || new Date(), estimatedArrival };
+    order.dispatchDetails = { driverName, driverPhone, vehicleNumber, dispatchDate: dispatchDate || new Date(), estimatedArrival, locationUrl: locationUrl || '' };
     await order.save();
 
     // Notify site engineer + director

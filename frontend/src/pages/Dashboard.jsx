@@ -7,6 +7,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '../api/axios';
 import StatusBadge from '../components/common/StatusBadge';
+import WeatherWidget from '../components/WeatherWidget';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const PIE_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#6366f1', '#ec4899'];
@@ -133,8 +134,11 @@ export default function Dashboard() {
         <StatCard icon={Users}       label="Contractors"     value={stats.totalContractors || 0} color="bg-purple-500" to="/contractors" />
       </div>
 
-      {/* Today's Workforce */}
-      <WorkforceWidget attendance={attendance} total={stats.totalWorkersPresent || 0} />
+      {/* Today's Workforce + Weather side-by-side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WorkforceWidget attendance={attendance} total={stats.totalWorkersPresent || 0} />
+        <WeatherWidget city="Ahmedabad" />
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

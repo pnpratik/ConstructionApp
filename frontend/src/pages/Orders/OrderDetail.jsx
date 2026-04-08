@@ -185,7 +185,7 @@ export default function OrderDetail() {
 
           {order.dispatchDetails?.driverName && (
             <div className="card">
-              <h3 className="font-semibold text-gray-800 mb-3 text-sm">Dispatch Details</h3>
+              <h3 className="font-semibold text-gray-800 mb-3 text-sm">🚛 Dispatch Details</h3>
               {[
                 { l: 'Driver', v: order.dispatchDetails.driverName },
                 { l: 'Phone', v: order.dispatchDetails.driverPhone },
@@ -196,6 +196,12 @@ export default function OrderDetail() {
                   <span className="text-gray-500">{i.l}</span><span className="font-medium">{i.v}</span>
                 </div>
               ))}
+              {order.dispatchDetails?.locationUrl && (
+                <a href={order.dispatchDetails.locationUrl} target="_blank" rel="noreferrer"
+                  className="mt-2 flex items-center gap-1.5 px-3 py-2 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 hover:bg-green-100 font-medium w-full justify-center">
+                  📍 Live Location — Track Driver
+                </a>
+              )}
             </div>
           )}
 
@@ -261,6 +267,12 @@ export default function OrderDetail() {
             <div><label className="label">Vehicle Number *</label><input className="input" placeholder="e.g. GJ01 AB 1234" onChange={e => setForm({ ...form, vehicleNumber: e.target.value })} /></div>
             <div><label className="label">Dispatch Date</label><input type="date" className="input" onChange={e => setForm({ ...form, dispatchDate: e.target.value })} /></div>
             <div className="col-span-2"><label className="label">Estimated Arrival Date</label><input type="date" className="input" onChange={e => setForm({ ...form, estimatedArrival: e.target.value })} /></div>
+            <div className="col-span-2">
+              <label className="label">📍 Driver Live Location Link <span className="text-gray-400 font-normal">(optional — paste Google Maps share link)</span></label>
+              <input className="input font-mono text-sm" placeholder="https://maps.app.goo.gl/... or WhatsApp location URL"
+                onChange={e => setForm({ ...form, locationUrl: e.target.value })} />
+              <p className="text-xs text-gray-400 mt-1">Driver can share live location from Google Maps → Share → Copy link</p>
+            </div>
           </div>
           <div className="flex justify-end gap-3">
             <button onClick={() => setModal(null)} className="btn-secondary">Cancel</button>

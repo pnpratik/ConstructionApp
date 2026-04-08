@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, FolderOpen, FileImage, Package, ShoppingCart,
+  LayoutDashboard, FolderOpen, FileImage, Package, ShoppingCart, IndianRupee,
   Users, Truck, Bell, BarChart3, Building2, ChevronDown,
   HardHat, Wrench, Zap, Layers, LogOut, ChevronLeft, ChevronRight, Settings,
 } from 'lucide-react';
@@ -105,6 +105,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
         {/* Reports */}
         {isAdmin() && <NavItem to="/reports" icon={BarChart3} label="Reports" />}
+
+        {/* Payments */}
+        {['director','chairperson','builder','admin'].includes(user?.role) && (
+          <NavItem to="/payments" icon={IndianRupee} label="Payment Tracker" />
+        )}
 
         {/* Settings */}
         {['director','chairperson','builder','admin'].includes(user?.role) && (

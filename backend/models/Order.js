@@ -53,7 +53,8 @@ const orderSchema = new mongoose.Schema({
     driverPhone: String,
     vehicleNumber: String,
     dispatchDate: Date,
-    estimatedArrival: Date
+    estimatedArrival: Date,
+    locationUrl: String,    // Live GPS share link (Google Maps / WhatsApp location)
   },
   // Delivery
   deliveryDetails: {
