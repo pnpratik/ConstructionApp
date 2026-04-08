@@ -27,6 +27,7 @@ import DeliveryUpload from './pages/Deliveries/DeliveryUpload';
 import NotificationList from './pages/Notifications/NotificationList';
 import Reports from './pages/Reports/Reports';
 import MarkAttendance from './pages/Attendance/MarkAttendance';
+import StoreSettings from './pages/Settings/StoreSettings';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -69,6 +70,7 @@ const AppRoutes = () => {
         <Route path="notifications" element={<NotificationList />} />
         <Route path="reports" element={<Reports />} />
         <Route path="attendance" element={<MarkAttendance />} />
+        <Route path="settings/stores" element={<StoreSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

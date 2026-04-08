@@ -30,6 +30,7 @@ app.use('/api/deliveries', require('./routes/deliveries'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/attendance', require('./routes/attendance'));
+app.use('/api/stores',    require('./routes/stores'));
 
 // Health check
 app.get('/api/health', (req, res) => {

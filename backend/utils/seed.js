@@ -6,6 +6,7 @@ const User       = require('../models/User');
 const Project    = require('../models/Project');
 const Vendor     = require('../models/Vendor');
 const Contractor = require('../models/Contractor');
+const Store      = require('../models/Store');
 
 // ─── Exported function: uses existing Mongoose connection ─────────────────────
 const seedData = async () => {
@@ -148,6 +149,66 @@ const seedData = async () => {
   ]);
   console.log(`👷 Created ${contractors.length} contractors`);
 
+  // ─── STORES (with placeholder camera config — ready for real IP) ──────────
+  const stores = await Store.create([
+    {
+      name: 'Steel Yard',
+      description: 'Open yard for steel bars, TMT, binding wire',
+      location: 'North Corner, Site Entrance',
+      storeType: 'open',
+      materialCategories: ['steel', 'aggregate_sand'],
+      project: project._id,
+      camera: {
+        enabled:  false,       // Set to true when real camera is installed
+        brand:    'hikvision',
+        ip:       '192.168.1.101',
+        port:     80,
+        username: 'admin',
+        password: 'admin123',  // Update with actual camera password
+        channel:  1,
+      },
+    },
+    {
+      name: 'Cement Godown',
+      description: 'Semi-covered storage for cement bags, concrete blocks',
+      location: 'West Side, Near Mixer',
+      storeType: 'semi_open',
+      materialCategories: ['cement', 'brick_block', 'concrete_rmc'],
+      project: project._id,
+      camera: {
+        enabled:  false,
+        brand:    'hikvision',
+        ip:       '192.168.1.102',
+        port:     80,
+        username: 'admin',
+        password: 'admin123',
+        channel:  1,
+      },
+    },
+    {
+      name: 'Plumbing & Electrical Store',
+      description: 'Locked indoor room for plumbing, electrical, tiles, ACP materials',
+      location: 'Ground Floor, Room No. 3',
+      storeType: 'closed',
+      materialCategories: [
+        'plumbing_pipes_fittings', 'bath_fittings_ceramic',
+        'electrical_cables', 'electrical_accessories',
+        'tiles_ceramic', 'acp_panels', 'aluminium_glass', 'doors_locks',
+      ],
+      project: project._id,
+      camera: {
+        enabled:  false,
+        brand:    'cpplus',
+        ip:       '192.168.1.103',
+        port:     80,
+        username: 'admin',
+        password: 'admin123',
+        channel:  1,
+      },
+    },
+  ]);
+  console.log(`🏪 Created ${stores.length} stores (cameras ready — enable after installation)`);
+
   console.log('✅ Demo data seeded successfully!');
 };
 
@@ -176,6 +237,7 @@ if (require.main === module) {
       Project.deleteMany({}),
       Vendor.deleteMany({}),
       Contractor.deleteMany({}),
+      Store.deleteMany({}),
     ]);
     await seedData();
 

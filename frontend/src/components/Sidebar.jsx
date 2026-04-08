@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import {
+import { Settings, NavLink, useNavigate } from 'react-router-dom';
+import { Settings,
   LayoutDashboard, FolderOpen, FileImage, Package, ShoppingCart,
   Users, Truck, Bell, BarChart3, Building2, ChevronDown,
   HardHat, Wrench, Zap, Layers, LogOut, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useNotifications } from '../context/NotificationContext';
+import { Settings, useAuth } from '../context/AuthContext';
+import { Settings, useNotifications } from '../context/NotificationContext';
 
 const NavItem = ({ to, icon: Icon, label, badge }) => (
   <NavLink to={to} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
@@ -105,6 +105,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
         {/* Reports */}
         {isAdmin() && <NavItem to="/reports" icon={BarChart3} label="Reports" />}
+
+        {/* Settings */}
+        {['director','chairperson','builder','admin'].includes(user?.role) && (
+          <NavItem to="/settings/stores" icon={Settings} label="Store & Cameras" />
+        )}
       </nav>
 
       {/* Logout */}
