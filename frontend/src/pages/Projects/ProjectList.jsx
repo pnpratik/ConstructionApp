@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, MapPin, Calendar, Users, ImagePlus, X } from 'lucide-react';
+import { Plus, MapPin, Calendar, Users, ImagePlus, X, IndianRupee, TrendingUp } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const statusColors = {
   planning:  'border-blue-200',
-  active:    'border-green-200',
+  active:    'border-green-300',
   completed: 'border-gray-200',
   on_hold:   'border-orange-200',
 };
@@ -21,59 +21,96 @@ const statusBg = {
   on_hold:   'bg-orange-50',
 };
 
+const statusProgress = {
+  planning:  { pct: 10, color: 'bg-blue-400' },
+  active:    { pct: 55, color: 'bg-green-500' },
+  completed: { pct: 100, color: 'bg-gray-400' },
+  on_hold:   { pct: 35, color: 'bg-orange-400' },
+};
+
 // ─── Project Card ──────────────────────────────────────────────────────────────
 function ProjectCard({ project }) {
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const API_BASE = '';
+  const prog = statusProgress[project.status] || { pct: 0, color: 'bg-gray-400' };
 
   return (
     <Link
       to={`/projects/${project._id}`}
-      className={`card hover:shadow-md transition-all border-2 overflow-hidden p-0 ${statusColors[project.status] || 'border-gray-100'}`}
+      className={`card hover:shadow-lg transition-all duration-200 border-2 overflow-hidden p-0 group ${statusColors[project.status] || 'border-gray-100'}`}
     >
       {/* Project image / placeholder */}
-      <div className={`relative h-36 w-full overflow-hidden ${project.imageUrl ? '' : statusBg[project.status] || 'bg-gray-50'}`}>
+      <div className={`relative h-40 w-full overflow-hidden ${project.imageUrl ? '' : statusBg[project.status] || 'bg-gray-50'}`}>
         {project.imageUrl ? (
           <img
             src={`${API_BASE}${project.imageUrl}`}
             alt={project.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl opacity-30">🏗️</span>
+            <span className="text-6xl opacity-20">🏗️</span>
           </div>
         )}
         <div className="absolute top-3 right-3">
           <StatusBadge status={project.status} />
         </div>
+        {/* Gradient overlay for image cards */}
+        {project.imageUrl && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        )}
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1 bg-gray-100">
+        <div
+          className={`h-full ${prog.color} transition-all duration-500`}
+          style={{ width: `${project.progress ?? prog.pct}%` }}
+        />
       </div>
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-800 text-lg mb-1 line-clamp-1">{project.name}</h3>
+        <h3 className="font-semibold text-gray-800 text-base md:text-lg mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">
+          {project.name}
+        </h3>
         {project.description && (
           <p className="text-gray-500 text-sm mb-3 line-clamp-2">{project.description}</p>
         )}
+
         <div className="space-y-1.5 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <MapPin size={13} className="text-gray-400 flex-shrink-0" />
-            <span className="truncate">{project.location}</span>
+            <span className="truncate text-sm">{project.location}</span>
           </div>
+
           {project.budget > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 text-xs">₹</span>
-              <span>₹{project.budget?.toLocaleString('en-IN')}</span>
+              <IndianRupee size={13} className="text-gray-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-700">
+                ₹{project.budget?.toLocaleString('en-IN')}
+              </span>
             </div>
           )}
+
           {project.startDate && (
             <div className="flex items-center gap-2">
               <Calendar size={13} className="text-gray-400 flex-shrink-0" />
-              <span>{new Date(project.startDate).toLocaleDateString('en-IN')}</span>
+              <span className="text-sm">{new Date(project.startDate).toLocaleDateString('en-IN')}</span>
+              {project.expectedEndDate && (
+                <span className="text-gray-400 text-xs">→ {new Date(project.expectedEndDate).toLocaleDateString('en-IN')}</span>
+              )}
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <Users size={13} className="text-gray-400 flex-shrink-0" />
-            <span>{project.assignedEngineers?.length || 0} engineers</span>
+
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              <Users size={13} className="text-gray-400 flex-shrink-0" />
+              <span className="text-sm">{project.assignedEngineers?.length || 0} engineers</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-400">
+              <TrendingUp size={11} />
+              <span>{project.progress ?? prog.pct}%</span>
+            </div>
           </div>
         </div>
       </div>
@@ -165,11 +202,9 @@ export default function ProjectList() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Use FormData so we can send the image file alongside text fields
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v); });
       if (imageFile) fd.append('image', imageFile);
-
       await api.post('/projects', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success('Project created!');
       setShowModal(false);
@@ -182,6 +217,14 @@ export default function ProjectList() {
     }
   };
 
+  // Summary stats
+  const counts = {
+    active:    projects.filter(p => p.status === 'active').length,
+    planning:  projects.filter(p => p.status === 'planning').length,
+    completed: projects.filter(p => p.status === 'completed').length,
+    on_hold:   projects.filter(p => p.status === 'on_hold').length,
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -190,10 +233,11 @@ export default function ProjectList() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Projects</h1>
-          <p className="text-gray-500">{projects.length} project{projects.length !== 1 ? 's' : ''} total</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Projects</h1>
+          <p className="text-sm text-gray-500">{projects.length} project{projects.length !== 1 ? 's' : ''} total</p>
         </div>
         {isAdmin() && (
           <button onClick={() => setShowModal(true)} className="btn-primary">
@@ -202,13 +246,23 @@ export default function ProjectList() {
         )}
       </div>
 
+      {/* Summary pills */}
+      {projects.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
+          {counts.active > 0    && <span className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-700">{counts.active} Active</span>}
+          {counts.planning > 0  && <span className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{counts.planning} Planning</span>}
+          {counts.on_hold > 0   && <span className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">{counts.on_hold} On Hold</span>}
+          {counts.completed > 0 && <span className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{counts.completed} Completed</span>}
+        </div>
+      )}
+
       {projects.length === 0 ? (
         <div className="card text-center py-16">
           <div className="text-5xl mb-4">🏗️</div>
           <p className="text-gray-500">No projects yet. Create your first project!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {projects.map(project => (
             <ProjectCard key={project._id} project={project} />
           ))}
@@ -218,7 +272,6 @@ export default function ProjectList() {
       {/* Create Project Modal */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); resetForm(); }} title="Create New Project" size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Image uploader at top */}
           <ImageUploader onFileSelect={setImageFile} />
 
           <div className="grid grid-cols-2 gap-4">

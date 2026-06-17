@@ -89,13 +89,13 @@ export default function OrderDetail() {
           )}
           {/* GST Invoice — visible once order is delivered */}
           {order.status === 'delivered' && (
-            <a href={`http://localhost:5001/api/orders/${id}/invoice`} target="_blank" rel="noreferrer"
+            <a href={`/api/orders/${id}/invoice`} target="_blank" rel="noreferrer"
               className="btn-secondary flex items-center gap-1.5">
               <FileText size={15} /> GST Invoice
             </a>
           )}
           {/* QR Code — always visible */}
-          <a href={`http://localhost:5001/api/orders/${id}/qr`} target="_blank" rel="noreferrer"
+          <a href={`/api/orders/${id}/qr`} target="_blank" rel="noreferrer"
             className="btn-secondary flex items-center gap-1.5 text-purple-600 border-purple-200 hover:bg-purple-50">
             <QrCode size={15} /> QR Code
           </a>

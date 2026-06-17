@@ -46,7 +46,7 @@ function SelfMarkPanel({ todayRecord, onSaved }) {
   };
 
   return (
-    <div className="card max-w-md mx-auto">
+    <div className="card max-w-md mx-auto p-4 md:p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
           <Users size={22} className="text-blue-600" />
@@ -267,10 +267,10 @@ export default function MarkAttendance() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 max-w-2xl mx-auto md:max-w-none">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Worker Attendance</h1>
-        <p className="text-gray-500">Record daily site workforce</p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Worker Attendance</h1>
+        <p className="text-sm text-gray-500">Record daily site workforce</p>
       </div>
 
       {isContractor && (

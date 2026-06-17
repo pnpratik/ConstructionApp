@@ -4,11 +4,15 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
 const { seedData } = require('./utils/seed');
+const { seedRandom } = require('./utils/seedRandom');
 
 const app = express();
 
-// Connect to MongoDB then auto-seed demo data
-connectDB().then(() => seedData()).catch(console.error);
+// Connect to MongoDB then auto-seed demo data + random data
+connectDB().then(async () => {
+  await seedData();
+  await seedRandom();
+}).catch(console.error);
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
@@ -32,11 +36,25 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/stores',    require('./routes/stores'));
 app.use('/api/payments',  require('./routes/payments'));
-app.use('/api/weather',   require('./routes/weather'));
+app.use('/api/weather',      require('./routes/weather'));
+app.use('/api/budget',      require('./routes/budget'));
+app.use('/api/schedule',    require('./routes/schedule'));
+app.use('/api/site-photos', require('./routes/sitePhotos'));
+app.use('/api/reports',     require('./routes/reports'));
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Construction App API is running', timestamp: new Date() });
+});
+
+// Manual re-seed random data (for demo refresh)
+app.post('/api/seed-demo', async (req, res) => {
+  try {
+    const result = await seedRandom();
+    res.json({ success: true, message: 'Demo data refreshed!', ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // Error handler

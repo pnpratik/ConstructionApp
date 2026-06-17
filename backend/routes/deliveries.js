@@ -161,9 +161,10 @@ router.get('/:id/qr', async (req, res) => {
       new Date(delivery.deliveredAt).toLocaleDateString('en-IN'),
     ].join(' | ');
 
-    // QR encodes the URL; label is metadata
+    // QR encodes the URL; label sent as ASCII-safe header
     const qrPng = await QRCode.toBuffer(url, { type: 'png', width: 300, margin: 2 });
-    res.set({ 'Content-Type': 'image/png', 'X-QR-Label': label });
+    const safeLabel = Buffer.from(label).toString('ascii').replace(/[^\x20-\x7E]/g, '?');
+    res.set({ 'Content-Type': 'image/png', 'X-QR-Label': safeLabel });
     res.send(qrPng);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
 
-const API_BASE = 'http://localhost:5001';
+const API_BASE = '';
 
 export default function QRLabel() {
   const { id } = useParams();

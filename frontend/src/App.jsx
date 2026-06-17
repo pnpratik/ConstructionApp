@@ -30,6 +30,9 @@ import MarkAttendance from './pages/Attendance/MarkAttendance';
 import StoreSettings from './pages/Settings/StoreSettings';
 import PaymentTracker from './pages/Payments/PaymentTracker';
 import QRLabel from './pages/Deliveries/QRLabel';
+import BudgetTracker from './pages/Budget/BudgetTracker';
+import WorkSchedule from './pages/Schedule/WorkSchedule';
+import SitePhotos from './pages/Photos/SitePhotos';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -75,6 +78,9 @@ const AppRoutes = () => {
         <Route path="settings/stores" element={<StoreSettings />} />
         <Route path="deliveries/:id/qr-label" element={<QRLabel />} />
         <Route path="payments" element={<PaymentTracker />} />
+        <Route path="budget" element={<BudgetTracker />} />
+        <Route path="schedule" element={<WorkSchedule />} />
+        <Route path="site-photos" element={<SitePhotos />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

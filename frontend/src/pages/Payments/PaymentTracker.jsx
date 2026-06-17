@@ -4,7 +4,7 @@ import { IndianRupee, CreditCard, AlertCircle, CheckCircle, Plus, Upload, Trash2
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
-const API_BASE = 'http://localhost:5001';
+const API_BASE = '';
 
 const METHOD_LABELS = {
   upi:    { label: '📱 UPI',       color: 'bg-purple-100 text-purple-700' },
@@ -183,13 +183,17 @@ export default function PaymentTracker() {
           <p className="text-2xl font-bold mt-1">{inr(totalOutstanding)}</p>
           <p className="text-orange-200 text-xs mt-1">{outstanding.length} invoices pending</p>
         </div>
-        {(summary?.byMethod || []).slice(0, 2).map(m => (
-          <div key={m._id} className="card p-4">
-            <p className="text-gray-500 text-sm">{METHOD_LABELS[m._id]?.label || m._id}</p>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{inr(m.total)}</p>
-            <p className="text-gray-400 text-xs mt-1">{m.count} payments</p>
-          </div>
-        ))}
+        {['rtgs', 'neft', 'upi', 'cheque', 'cash', 'other'].map(method => {
+          const m = (summary?.byMethod || []).find(x => x._id === method);
+          if (!m) return null;
+          return (
+            <div key={method} className="card p-4">
+              <p className="text-gray-500 text-sm">{METHOD_LABELS[method]?.label || method}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{inr(m.total)}</p>
+              <p className="text-gray-400 text-xs mt-1">{m.count} payment{m.count !== 1 ? 's' : ''}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Tabs */}

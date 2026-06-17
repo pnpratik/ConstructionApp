@@ -365,7 +365,7 @@ export default function StoreSettings() {
                             <div className="bg-green-50 px-3 py-1.5 text-xs text-green-700 font-medium flex items-center gap-1">
                               <CheckCircle size={12} /> Live snapshot captured successfully
                             </div>
-                            <img src={`http://localhost:5001${testSnap}`} alt="Test Snapshot"
+                            <img src={`${testSnap}`} alt="Test Snapshot"
                               className="w-full max-h-48 object-cover" />
                           </div>
                         )}
