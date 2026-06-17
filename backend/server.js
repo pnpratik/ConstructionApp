@@ -8,10 +8,17 @@ const { seedRandom } = require('./utils/seedRandom');
 
 const app = express();
 
-// Connect to MongoDB then auto-seed demo data + random data
+// Connect to MongoDB then seed only if DB is empty (persistent DB keeps data between restarts)
 connectDB().then(async () => {
-  await seedData();
-  await seedRandom();
+  const User = require('./models/User');
+  const count = await User.countDocuments();
+  if (count === 0) {
+    console.log('📦 Fresh database — running seed...');
+    await seedData();
+    await seedRandom();
+  } else {
+    console.log(`✅ Database has ${count} users — skipping seed`);
+  }
 }).catch(console.error);
 
 // Middleware

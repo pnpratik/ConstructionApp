@@ -31,7 +31,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ── POST /api/drawings — Upload + auto-analyze + auto-calculate ───────────────
+// ── POST /api/drawings — Upload only, NO auto-calculation ────────────────────
+// Materials must be calculated explicitly by the user via POST /:id/calculate
 router.post('/', uploadDrawing.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -40,18 +41,18 @@ router.post('/', uploadDrawing.single('file'), async (req, res) => {
 
     // Check if a drawing of same project+type already exists (latest)
     const existing = await Drawing.findOne({ project, type, isLatest: true });
-    let revision = 0;
+    let revision     = 0;
     let parentDrawing = null;
+    let prevInputs    = null;
 
     if (existing) {
-      // This is a revision upload — mark old one as not latest
       revision      = (existing.revision || 0) + 1;
       parentDrawing = existing._id;
+      prevInputs    = existing.inputs || null;   // pass back so frontend can prefill
       existing.isLatest = false;
       await existing.save();
     }
 
-    // Create the drawing record
     const drawing = await Drawing.create({
       project,
       type,
@@ -63,55 +64,17 @@ router.post('/', uploadDrawing.single('file'), async (req, res) => {
       revisionNote: revisionNote || '',
       parentDrawing,
       isLatest:     true,
-      status:       'uploaded',
+      status:       'uploaded',   // stays 'uploaded' until user manually calculates
     });
 
-    // ── Auto-analyze file ─────────────────────────────────────────────────
-    const filePath = path.join(__dirname, '..', 'uploads', 'drawings', req.file.filename);
-    const analysis = await analyzeDrawingFile(filePath, type);
-    const inputs   = analysis.inputs || {};
-
-    // ── Auto-calculate materials ──────────────────────────────────────────
-    const materials = calculateMaterials(type, inputs);
-
-    // Save inputs + calculations back to drawing
-    drawing.inputs               = inputs;
-    drawing.materialCalculations = materials;
-    drawing.status               = 'analyzed';
-    await drawing.save();
-
-    // ── Upsert MaterialRequirements (add delta if revision) ───────────────
-    for (const mat of materials) {
-      await MaterialRequirement.findOneAndUpdate(
-        { project, materialName: mat.materialName },
-        {
-          $set: {
-            category:    mat.category,
-            unit:        mat.unit,
-            fromDrawing: drawing._id,
-          },
-          // On revision: replace quantity (not add), so use $set for totalRequired
-          // We use a two-step approach: first get old, then update delta
-        },
-        { upsert: true, new: true }
-      );
-      // Replace totalRequired with latest drawing's value
-      await MaterialRequirement.findOneAndUpdate(
-        { project, materialName: mat.materialName },
-        { $set: { totalRequired: mat.quantity } }
-      );
-    }
-
-    // ── Populate for response ─────────────────────────────────────────────
     await drawing.populate(['project', 'uploadedBy']);
 
     res.status(201).json({
-      success: true,
+      success:     true,
       drawing,
-      materials,
-      analysisConfidence: analysis.confidence,
-      isRevision: revision > 0,
+      isRevision:  revision > 0,
       revision,
+      prevInputs,  // previous revision's inputs so frontend can offer "reuse"
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -153,38 +116,42 @@ router.get('/:id/revisions', async (req, res) => {
   }
 });
 
-// ── POST /api/drawings/:id/calculate — Manual recalculate (override inputs) ───
-// Still available for manual correction but optional now
+// ── POST /api/drawings/:id/calculate — User-triggered calculation ────────────
+// Body: { inputs: {...}, saveToRequirements: true|false }
+// When saveToRequirements is false (default): only previews — does NOT touch MaterialRequirements
+// When saveToRequirements is true: saves to MaterialRequirements (user confirmed)
 router.post('/:id/calculate', async (req, res) => {
   try {
     const drawing = await Drawing.findById(req.params.id);
     if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
 
-    const inputs    = req.body.inputs || drawing.inputs || {};
-    const materials = calculateMaterials(drawing.type, inputs);
+    const inputs             = req.body.inputs || drawing.inputs || {};
+    const saveToRequirements = req.body.saveToRequirements === true;
+    const materials          = calculateMaterials(drawing.type, inputs);
 
     drawing.inputs               = inputs;
     drawing.materialCalculations = materials;
     drawing.status               = 'analyzed';
     await drawing.save();
 
-    // Update MaterialRequirements
-    for (const mat of materials) {
-      await MaterialRequirement.findOneAndUpdate(
-        { project: drawing.project, materialName: mat.materialName },
-        {
-          $set: {
-            category:      mat.category,
-            unit:          mat.unit,
-            fromDrawing:   drawing._id,
-            totalRequired: mat.quantity,
+    if (saveToRequirements) {
+      for (const mat of materials) {
+        await MaterialRequirement.findOneAndUpdate(
+          { project: drawing.project, materialName: mat.materialName },
+          {
+            $set: {
+              category:      mat.category,
+              unit:          mat.unit,
+              fromDrawing:   drawing._id,
+              totalRequired: mat.quantity,
+            },
           },
-        },
-        { upsert: true, new: true }
-      );
+          { upsert: true, new: true }
+        );
+      }
     }
 
-    res.json({ success: true, drawing, materials });
+    res.json({ success: true, drawing, materials, savedToRequirements: saveToRequirements });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

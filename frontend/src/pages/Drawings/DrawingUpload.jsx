@@ -36,13 +36,10 @@ export default function DrawingUpload() {
 
     try {
       const res = await api.post('/drawings', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const conf = res.data.analysisConfidence;
       toast.success(
         res.data.isRevision
-          ? `Rev ${res.data.revision} uploaded & analyzed!`
-          : conf === 'high'
-            ? '✅ Drawing analyzed — materials extracted!'
-            : '📐 Drawing uploaded & analyzed — please review quantities',
+          ? `Rev ${res.data.revision} uploaded — now enter inputs to calculate materials`
+          : '✅ Drawing uploaded — enter dimensions to calculate material quantities',
         { duration: 4000 }
       );
       navigate(`/drawings/${res.data.drawing._id}/calculate`);
@@ -59,7 +56,7 @@ export default function DrawingUpload() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><ArrowLeft size={20} /></button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Upload Drawing</h1>
-          <p className="text-gray-500">Upload once — materials are extracted and saved automatically</p>
+          <p className="text-gray-500">Upload the file, then enter dimensions to calculate material quantities</p>
         </div>
       </div>
 
@@ -127,7 +124,7 @@ export default function DrawingUpload() {
           <button type="button" onClick={() => navigate(-1)} className="btn-secondary">Cancel</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload size={16} />}
-            {loading ? 'Uploading...' : 'Upload & Analyze'}
+            {loading ? 'Uploading...' : 'Upload Drawing'}
           </button>
         </div>
       </form>

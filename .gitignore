@@ -13,8 +13,12 @@ frontend/build/
 # Upload folders (user files – not committed)
 backend/uploads/drawings/*
 backend/uploads/challans/*
+backend/uploads/site-photos/*
 !backend/uploads/drawings/.gitkeep
 !backend/uploads/challans/.gitkeep
+
+# Persistent local MongoDB data
+backend/data/
 
 # Logs
 *.log
