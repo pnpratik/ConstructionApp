@@ -9,6 +9,7 @@
     "seed": "node utils/seed.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
     "axios": "^1.14.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

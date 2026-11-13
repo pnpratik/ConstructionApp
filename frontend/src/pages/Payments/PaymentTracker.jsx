@@ -211,53 +211,99 @@ export default function PaymentTracker() {
 
       {/* Outstanding Tab */}
       {tab === 'outstanding' && (
-        <div className="card">
+        <div>
           {outstanding.length === 0 ? (
-            <div className="text-center py-16">
+            <div className="card text-center py-16">
               <CheckCircle size={48} className="text-green-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">All invoices paid!</p>
               <p className="text-gray-400 text-sm">No outstanding payments</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead><tr className="border-b border-gray-100">
-                  <th className="table-header">Order</th>
-                  <th className="table-header">Vendor</th>
-                  <th className="table-header">Project</th>
-                  <th className="table-header">Total</th>
-                  <th className="table-header">Paid</th>
-                  <th className="table-header">Outstanding</th>
-                  <th className="table-header">Delivered</th>
-                  <th className="table-header">Action</th>
-                </tr></thead>
-                <tbody>
-                  {outstanding.map(o => (
-                    <tr key={o._id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="table-cell">
-                        <Link to={`/orders/${o._id}`} className="text-blue-600 hover:underline font-medium text-sm">{o.orderNumber}</Link>
-                      </td>
-                      <td className="table-cell text-sm text-gray-700">{o.vendor?.name || '—'}</td>
-                      <td className="table-cell text-sm text-gray-500">{o.project?.name || '—'}</td>
-                      <td className="table-cell text-sm font-medium">{inr(o.totalAmount)}</td>
-                      <td className="table-cell text-sm text-green-600 font-medium">{inr(o.paid)}</td>
-                      <td className="table-cell">
-                        <span className="text-sm font-bold text-orange-600">{inr(o.outstanding)}</span>
-                      </td>
-                      <td className="table-cell text-xs text-gray-400">
-                        {o.deliveredAt ? new Date(o.deliveredAt).toLocaleDateString('en-IN') : '—'}
-                      </td>
-                      <td className="table-cell">
-                        <button onClick={() => setPayOrder(o)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700">
-                          <Plus size={11} /> Pay
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3">
+                {outstanding.map(o => (
+                  <div key={o._id} className="card p-4 border border-orange-100">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <Link to={`/orders/${o._id}`} className="font-bold text-blue-600 text-sm">{o.orderNumber}</Link>
+                        <p className="text-xs text-gray-500 mt-0.5">{o.vendor?.name || '—'}</p>
+                        <p className="text-xs text-gray-400">{o.project?.name || '—'}</p>
+                      </div>
+                      <button onClick={() => setPayOrder(o)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-xl text-xs font-semibold hover:bg-green-700 flex-shrink-0">
+                        <Plus size={11} /> Pay
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center bg-orange-50 rounded-xl p-2.5">
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-0.5">Total</p>
+                        <p className="text-xs font-bold text-gray-700">{inr(o.totalAmount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-0.5">Paid</p>
+                        <p className="text-xs font-bold text-green-600">{inr(o.paid)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-0.5">Due</p>
+                        <p className="text-xs font-bold text-orange-600">{inr(o.outstanding)}</p>
+                      </div>
+                    </div>
+                    {/* Payment progress bar */}
+                    <div className="mt-2.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min((o.paid / o.totalAmount) * 100, 100)}%` }} />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1 text-right">
+                      {Math.round((o.paid / o.totalAmount) * 100)}% paid
+                      {o.deliveredAt && ` · Delivered ${new Date(o.deliveredAt).toLocaleDateString('en-IN')}`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block card">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead><tr className="border-b border-gray-100">
+                      <th className="table-header">Order</th>
+                      <th className="table-header">Vendor</th>
+                      <th className="table-header">Project</th>
+                      <th className="table-header">Total</th>
+                      <th className="table-header">Paid</th>
+                      <th className="table-header">Outstanding</th>
+                      <th className="table-header">Delivered</th>
+                      <th className="table-header">Action</th>
+                    </tr></thead>
+                    <tbody>
+                      {outstanding.map(o => (
+                        <tr key={o._id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="table-cell">
+                            <Link to={`/orders/${o._id}`} className="text-blue-600 hover:underline font-medium text-sm">{o.orderNumber}</Link>
+                          </td>
+                          <td className="table-cell text-sm text-gray-700">{o.vendor?.name || '—'}</td>
+                          <td className="table-cell text-sm text-gray-500">{o.project?.name || '—'}</td>
+                          <td className="table-cell text-sm font-medium">{inr(o.totalAmount)}</td>
+                          <td className="table-cell text-sm text-green-600 font-medium">{inr(o.paid)}</td>
+                          <td className="table-cell">
+                            <span className="text-sm font-bold text-orange-600">{inr(o.outstanding)}</span>
+                          </td>
+                          <td className="table-cell text-xs text-gray-400">
+                            {o.deliveredAt ? new Date(o.deliveredAt).toLocaleDateString('en-IN') : '—'}
+                          </td>
+                          <td className="table-cell">
+                            <button onClick={() => setPayOrder(o)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700">
+                              <Plus size={11} /> Pay
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}

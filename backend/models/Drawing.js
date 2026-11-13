@@ -27,9 +27,14 @@ const drawingSchema = new mongoose.Schema({
 
   // ── Inputs saved at time of calculation ──────────────────────────────────
   inputs: {
-    // Structural / Architectural
+    // Structural (RCC)
     floorArea:      Number,
     floors:         Number,
+    barDiameters:   [String],  // only diameters present in BBS e.g. ['8','12','16','20']
+    totalSteelKg:   Number,
+    concreteSlab:   Number,
+    concreteColumn: Number,
+    // Architectural (walls/masonry)
     wallLength:     Number,
     wallHeight:     Number,
     wallThickness:  Number,
@@ -51,9 +56,29 @@ const drawingSchema = new mongoose.Schema({
 
   materialCalculations: [materialCalcSchema],
 
+  // ── AI analysis results ──────────────────────────────────────────────────
+  aiExtracted: {
+    type: mongoose.Schema.Types.Mixed,  // raw extracted fields from AI
+    default: null,
+  },
+  aiClarifyingQuestions: {
+    type: [{
+      id:        String,
+      question:  String,
+      type:      String,   // 'number' | 'select'
+      fieldName: String,
+      hint:      String,
+      options:   [String],
+    }],
+    default: [],
+  },
+  aiConfidence:  { type: String, default: null },  // 'high' | 'medium' | 'low'
+  aiNotes:       { type: String, default: '' },
+  aiError:       { type: String, default: null },  // error message if AI failed
+
   status: {
     type: String,
-    enum: ['uploaded', 'analyzed', 'approved'],
+    enum: ['uploaded', 'ai_analyzing', 'ai_done', 'analyzed', 'approved'],
     default: 'uploaded',
   },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

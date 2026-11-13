@@ -137,15 +137,15 @@ const seedData = async () => {
 
   // ─── CONTRACTORS ──────────────────────────────────────────────────────────
   const contractors = await Contractor.create([
-    { user: findUser('civil@nirman.com')?._id,      type: 'civil',      company: 'Dinesh Construction',     license: 'GJ-CIV-2022-001',  experience: 15, projects: [project._id] },
-    { user: findUser('plumbing@nirman.com')?._id,   type: 'plumbing',   company: 'Haresh Plumbing Works',   license: 'GJ-PLB-2022-002',  experience: 10, projects: [project._id] },
-    { user: findUser('color@nirman.com')?._id,      type: 'color',      company: 'Rakesh Paint Works',      experience: 8  },
-    { user: findUser('lift@nirman.com')?._id,       type: 'lift',       company: 'Nilesh Elevators',        license: 'GJ-LIFT-2023-001', experience: 12 },
-    { user: findUser('electric@nirman.com')?._id,   type: 'electrical', company: 'Hitesh Electricals',      license: 'GJ-ELC-2022-003',  experience: 11, projects: [project._id] },
-    { user: findUser('tile@nirman.com')?._id,       type: 'tile',       company: 'Jitesh Tile Works',       experience: 7,  projects: [project._id] },
-    { user: findUser('acp@nirman.com')?._id,        type: 'acp',        company: 'Manish ACP Solutions',    experience: 9  },
-    { user: findUser('aluminium@nirman.com')?._id,  type: 'aluminium',  company: 'Kamlesh Aluminium Works', experience: 13 },
-    { user: findUser('doorlock@nirman.com')?._id,   type: 'door_lock',  company: 'Vipul Door & Hardware',   experience: 6  },
+    { user: findUser('civil@nirman.com')?._id,      type: 'civil',      company: 'Dinesh Construction',     license: 'GJ-CIV-2022-001',  experience: 15, dailyRate: 650, projects: [project._id] },
+    { user: findUser('plumbing@nirman.com')?._id,   type: 'plumbing',   company: 'Haresh Plumbing Works',   license: 'GJ-PLB-2022-002',  experience: 10, dailyRate: 600, projects: [project._id] },
+    { user: findUser('color@nirman.com')?._id,      type: 'color',      company: 'Rakesh Paint Works',      experience: 8,  dailyRate: 500 },
+    { user: findUser('lift@nirman.com')?._id,       type: 'lift',       company: 'Nilesh Elevators',        license: 'GJ-LIFT-2023-001', experience: 12, dailyRate: 800 },
+    { user: findUser('electric@nirman.com')?._id,   type: 'electrical', company: 'Hitesh Electricals',      license: 'GJ-ELC-2022-003',  experience: 11, dailyRate: 700, projects: [project._id] },
+    { user: findUser('tile@nirman.com')?._id,       type: 'tile',       company: 'Jitesh Tile Works',       experience: 7,  dailyRate: 550, projects: [project._id] },
+    { user: findUser('acp@nirman.com')?._id,        type: 'acp',        company: 'Manish ACP Solutions',    experience: 9,  dailyRate: 600 },
+    { user: findUser('aluminium@nirman.com')?._id,  type: 'aluminium',  company: 'Kamlesh Aluminium Works', experience: 13, dailyRate: 750 },
+    { user: findUser('doorlock@nirman.com')?._id,   type: 'door_lock',  company: 'Vipul Door & Hardware',   experience: 6,  dailyRate: 500 },
   ]);
   console.log(`👷 Created ${contractors.length} contractors`);
 

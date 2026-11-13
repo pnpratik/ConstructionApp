@@ -32,7 +32,9 @@ import PaymentTracker from './pages/Payments/PaymentTracker';
 import QRLabel from './pages/Deliveries/QRLabel';
 import BudgetTracker from './pages/Budget/BudgetTracker';
 import WorkSchedule from './pages/Schedule/WorkSchedule';
+import LaborBilling from './pages/Labor/LaborBilling';
 import SitePhotos from './pages/Photos/SitePhotos';
+import ChequeWriter from './pages/ChequeWriting/ChequeWriter';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -79,8 +81,10 @@ const AppRoutes = () => {
         <Route path="deliveries/:id/qr-label" element={<QRLabel />} />
         <Route path="payments" element={<PaymentTracker />} />
         <Route path="budget" element={<BudgetTracker />} />
+        <Route path="labor-billing" element={<LaborBilling />} />
         <Route path="schedule" element={<WorkSchedule />} />
         <Route path="site-photos" element={<SitePhotos />} />
+        <Route path="cheque-writing" element={<ChequeWriter />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

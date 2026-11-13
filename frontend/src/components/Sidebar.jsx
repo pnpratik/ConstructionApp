@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FolderOpen, FileImage, Package, ShoppingCart, IndianRupee,
   Users, Truck, Bell, BarChart3, Building2, HardHat, Layers,
   LogOut, ChevronLeft, ChevronRight, Settings, X,
-  Wallet, CalendarDays, Camera,
+  Wallet, CalendarDays, Camera, Receipt, FileText,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -148,7 +148,11 @@ export default function Sidebar({ collapsed, setCollapsed, onClose }) {
         )}
 
         {isManagement && (
-          <NavItem to="/payments" icon={IndianRupee} label="Payments" collapsed={collapsed} />
+          <>
+            <NavItem to="/payments"      icon={IndianRupee} label="Payments"       collapsed={collapsed} />
+            <NavItem to="/labor-billing"   icon={Receipt}   label="Labor Billing"   collapsed={collapsed} />
+            <NavItem to="/cheque-writing" icon={FileText}   label="Cheque Writing"  collapsed={collapsed} />
+          </>
         )}
 
         {isManagement && (

@@ -7,6 +7,17 @@ import StatusBadge from '../../components/common/StatusBadge';
 
 const STATUS_OPTIONS = ['all', 'pending_approval', 'approved', 'sent_to_vendor', 'accepted_by_vendor', 'dispatched', 'delivered', 'rejected'];
 
+const STATUS_LABELS = {
+  all:               'All',
+  pending_approval:  'Pending',
+  approved:          'Approved',
+  sent_to_vendor:    'Sent to Vendor',
+  accepted_by_vendor:'Accepted',
+  dispatched:        'Dispatched',
+  delivered:         'Delivered',
+  rejected:          'Rejected',
+};
+
 const PRIORITY_CLASSES = {
   low:    'bg-gray-100 text-gray-500',
   medium: 'bg-blue-100 text-blue-600',
@@ -38,6 +49,12 @@ export default function OrderList() {
     o.vendor?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Count per status across ALL fetched orders (not filtered by search)
+  const statusCounts = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
@@ -66,19 +83,27 @@ export default function OrderList() {
 
       {/* Filter pills — horizontal scroll on mobile */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
-        {STATUS_OPTIONS.map(s => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-              filter === s
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
-            }`}
-          >
-            {s === 'all' ? 'All' : s.replace(/_/g, ' ')}
-          </button>
-        ))}
+        {STATUS_OPTIONS.map(s => {
+          const count = s === 'all' ? orders.length : (statusCounts[s] || 0);
+          return (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                filter === s
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
+              }`}
+            >
+              {STATUS_LABELS[s] || s}
+              {count > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  filter === s ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'
+                }`}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}

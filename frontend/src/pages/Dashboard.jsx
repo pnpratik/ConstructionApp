@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FolderOpen, ShoppingCart, Truck, Users, Clock,
   CheckCircle, Package, AlertCircle, HardHat, TrendingUp,
-  ArrowRight, IndianRupee,
+  ArrowRight, IndianRupee, Plus, Upload, Zap,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '../api/axios';
 import StatusBadge from '../components/common/StatusBadge';
 import WeatherWidget from '../components/WeatherWidget';
+import { useAuth } from '../context/AuthContext';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const PIE_COLORS = ['#f59e0b','#3b82f6','#10b981','#8b5cf6','#ef4444','#6366f1','#ec4899'];
@@ -96,13 +97,51 @@ function WorkforceWidget({ attendance, total }) {
   );
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function QuickActions({ canRequest }) {
+  const actions = [
+    { icon: Plus,   label: 'New Order',     to: '/orders/new',    color: 'bg-blue-600 hover:bg-blue-700',     show: canRequest },
+    { icon: HardHat,label: 'Attendance',    to: '/attendance',    color: 'bg-orange-500 hover:bg-orange-600', show: true },
+    { icon: Upload, label: 'Upload Drawing',to: '/drawings',      color: 'bg-purple-600 hover:bg-purple-700', show: true },
+    { icon: IndianRupee, label: 'Payments', to: '/payments',      color: 'bg-emerald-600 hover:bg-emerald-700', show: true },
+  ].filter(a => a.show);
+
+  return (
+    <div className="grid grid-cols-4 gap-2 sm:gap-3">
+      {actions.map(a => (
+        <Link key={a.to} to={a.to}
+          className={`${a.color} text-white rounded-2xl p-3 sm:p-4 flex flex-col items-center gap-1.5 transition-all active:scale-95 shadow-sm`}>
+          <a.icon size={20} />
+          <span className="text-xs font-semibold text-center leading-tight">{a.label}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user, canRequest }  = useAuth();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api.get('/dashboard/stats').then(r => setData(r.data)).catch(console.error).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Refresh when tab regains focus (e.g. after marking attendance in another tab)
+  useEffect(() => {
+    const handleFocus = () => load();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [load]);
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -118,10 +157,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-5 md:space-y-6 animate-slide-up">
       {/* Header */}
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Nirmaan Construction Management</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400 font-medium">{getGreeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
+        </div>
+        <span className="text-xs text-gray-400 hidden sm:block">
+          {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </span>
       </div>
+
+      {/* Quick actions */}
+      <QuickActions canRequest={canRequest()} />
 
       {/* Stat cards — 2 cols mobile, 4 cols desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">

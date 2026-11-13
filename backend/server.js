@@ -47,7 +47,8 @@ app.use('/api/weather',      require('./routes/weather'));
 app.use('/api/budget',      require('./routes/budget'));
 app.use('/api/schedule',    require('./routes/schedule'));
 app.use('/api/site-photos', require('./routes/sitePhotos'));
-app.use('/api/reports',     require('./routes/reports'));
+app.use('/api/reports',       require('./routes/reports'));
+app.use('/api/labor-billing', require('./routes/laborBilling'));
 
 // Health check
 app.get('/api/health', (req, res) => {

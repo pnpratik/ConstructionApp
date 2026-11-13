@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, CheckCircle } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -112,30 +112,39 @@ function SelfMarkPanel({ todayRecord, onSaved }) {
 function OverviewPanel({ contractors, onSave }) {
   const [counts, setCounts] = useState({});
   const [saving, setSaving] = useState(null);
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const init = {};
     contractors.forEach(c => {
-      init[c._id] = c.presentCount ?? '';
+      // Preserve any edited value; only set from server if not yet touched
+      init[c._id] = c.presentCount !== null ? c.presentCount : '';
     });
     setCounts(init);
   }, [contractors]);
 
   const handleSave = async (contractor) => {
-    const count = counts[contractor._id];
-    if (count === '' || parseInt(count) < 0) return;
+    const raw   = counts[contractor._id];
+    const count = parseInt(raw);
+    if (raw === '' || raw === undefined || isNaN(count) || count < 0) {
+      toast.error('Enter a valid worker count (0 or more)');
+      return;
+    }
     setSaving(contractor._id);
     try {
-      await api.post('/attendance', { presentCount: parseInt(count), contractorId: contractor._id });
-      toast.success(`Attendance saved for ${contractor.name}`);
+      await api.post('/attendance', { presentCount: count, contractorId: contractor._id });
+      toast.success(`Updated: ${contractor.name} — ${count} workers`);
       onSave();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(err.response?.data?.message || 'Failed to save');
     } finally {
       setSaving(null);
     }
   };
+
+  const totalPresent = contractors.reduce((s, c) => {
+    const v = counts[c._id];
+    return s + (v !== '' && !isNaN(parseInt(v)) ? parseInt(v) : 0);
+  }, 0);
 
   const unmarked = contractors.filter(c => c.presentCount === null);
   const marked   = contractors.filter(c => c.presentCount !== null);
@@ -143,20 +152,27 @@ function OverviewPanel({ contractors, onSave }) {
   return (
     <div className="space-y-4">
       <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800">Mark / Update Contractor Attendance</h2>
-          <span className="text-sm text-gray-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <h2 className="font-bold text-gray-800">Mark / Update Contractor Attendance</h2>
+            <p className="text-sm text-gray-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          </div>
+          {/* Live total — updates as you type */}
+          <div className="text-right">
+            <p className="text-2xl font-bold text-blue-600">{totalPresent}</p>
+            <p className="text-xs text-gray-400">total workers today</p>
+          </div>
         </div>
 
-        {/* Unmarked contractors first */}
+        {/* Unmarked contractors */}
         {unmarked.length > 0 && (
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase mb-3">{unmarked.length} not yet marked</p>
+          <div className="mb-5">
+            <p className="text-xs font-semibold text-orange-500 uppercase mb-2">{unmarked.length} not yet marked</p>
             <div className="space-y-2">
               {unmarked.map(c => (
-                <div key={c._id} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 bg-gray-50">
+                <div key={c._id} className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-orange-200 bg-orange-50">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-700 truncate">{c.name}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate">{c.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[c.type] || 'bg-gray-100 text-gray-600'}`}>
                         {TYPE_LABELS[c.type] || c.type}
@@ -171,10 +187,11 @@ function OverviewPanel({ contractors, onSave }) {
                       placeholder="0"
                       value={counts[c._id] ?? ''}
                       onChange={e => setCounts(p => ({ ...p, [c._id]: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && handleSave(c)}
                     />
                     <button
                       onClick={() => handleSave(c)}
-                      disabled={saving === c._id || counts[c._id] === ''}
+                      disabled={saving === c._id}
                       className="btn-primary py-1.5 px-3 text-sm"
                     >
                       {saving === c._id ? '…' : 'Save'}
@@ -186,47 +203,47 @@ function OverviewPanel({ contractors, onSave }) {
           </div>
         )}
 
-        {/* Already marked */}
+        {/* Already marked — always visible, no collapse */}
         {marked.length > 0 && (
           <div>
-            <button
-              onClick={() => setShowAll(v => !v)}
-              className="flex items-center gap-1 text-xs font-semibold text-gray-400 uppercase mb-3"
-            >
-              {showAll ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {marked.length} already marked
-            </button>
-
-            {showAll && (
-              <div className="space-y-2">
-                {marked.map(c => (
-                  <div key={c._id} className="flex items-center gap-3 p-3 rounded-xl border border-green-100 bg-green-50">
-                    <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">{c.name}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[c.type] || 'bg-gray-100 text-gray-600'}`}>
-                        {TYPE_LABELS[c.type] || c.type}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <input
-                        type="number" min="0"
-                        className="w-20 input text-center py-1.5"
-                        value={counts[c._id] ?? c.presentCount}
-                        onChange={e => setCounts(p => ({ ...p, [c._id]: e.target.value }))}
-                      />
-                      <button
-                        onClick={() => handleSave(c)}
-                        disabled={saving === c._id}
-                        className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-white text-gray-600"
-                      >
-                        {saving === c._id ? '…' : 'Update'}
-                      </button>
-                    </div>
+            <p className="text-xs font-semibold text-green-600 uppercase mb-2">{marked.length} marked — tap count to update</p>
+            <div className="space-y-2">
+              {marked.map(c => (
+                <div key={c._id} className="flex items-center gap-3 p-3 rounded-xl border border-green-100 bg-green-50">
+                  <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{c.name}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[c.type] || 'bg-gray-100 text-gray-600'}`}>
+                      {TYPE_LABELS[c.type] || c.type}
+                    </span>
+                    {c.company && <span className="text-xs text-gray-400 ml-2">{c.company}</span>}
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <input
+                      type="number" min="0"
+                      className="w-20 input text-center py-1.5"
+                      value={counts[c._id] ?? c.presentCount}
+                      onChange={e => setCounts(p => ({ ...p, [c._id]: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && handleSave(c)}
+                    />
+                    <button
+                      onClick={() => handleSave(c)}
+                      disabled={saving === c._id}
+                      className="btn-primary py-1.5 px-3 text-sm"
+                    >
+                      {saving === c._id ? '…' : 'Update'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {contractors.length === 0 && (
+          <div className="text-center py-8 text-gray-400">
+            <Users size={36} className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No contractors registered yet</p>
           </div>
         )}
       </div>

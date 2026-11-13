@@ -7,17 +7,15 @@ const MaterialRequirement = require('../models/MaterialRequirement');
 const { protect, authorize } = require('../middleware/auth');
 const { uploadDrawing }   = require('../middleware/upload');
 const { calculateMaterials }  = require('../utils/materialCalculator');
-const { analyzeDrawingFile }  = require('../utils/dwgAnalyzer');
+const { analyzeDrawingWithAI } = require('../utils/drawingAI');
 
 router.use(protect);
 
 // ── GET /api/drawings?project=id&showAll=1 ────────────────────────────────────
-// By default only returns the latest revision of each drawing.
 router.get('/', async (req, res) => {
   try {
     const filter = {};
     if (req.query.project) filter.project = req.query.project;
-    // showAll=1 returns every revision; default → only latest
     if (!req.query.showAll) filter.isLatest = true;
 
     const drawings = await Drawing.find(filter)
@@ -31,28 +29,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ── POST /api/drawings — Upload only, NO auto-calculation ────────────────────
-// Materials must be calculated explicitly by the user via POST /:id/calculate
+// ── POST /api/drawings — Upload + AI analysis ────────────────────────────────
+// Flow: store file → call Claude vision → store extracted data + questions →
+//       return to frontend which shows questions → user answers → calculate
 router.post('/', uploadDrawing.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
     const { project, type, description, revisionNote } = req.body;
 
-    // Check if a drawing of same project+type already exists (latest)
+    // Handle revision tracking
     const existing = await Drawing.findOne({ project, type, isLatest: true });
-    let revision     = 0;
+    let revision      = 0;
     let parentDrawing = null;
-    let prevInputs    = null;
+    let prevAiExtracted = null;
 
     if (existing) {
-      revision      = (existing.revision || 0) + 1;
-      parentDrawing = existing._id;
-      prevInputs    = existing.inputs || null;   // pass back so frontend can prefill
+      revision        = (existing.revision || 0) + 1;
+      parentDrawing   = existing._id;
+      prevAiExtracted = existing.aiExtracted || null;
       existing.isLatest = false;
       await existing.save();
     }
 
+    // Save drawing record immediately so we have an ID
     const drawing = await Drawing.create({
       project,
       type,
@@ -64,17 +64,37 @@ router.post('/', uploadDrawing.single('file'), async (req, res) => {
       revisionNote: revisionNote || '',
       parentDrawing,
       isLatest:     true,
-      status:       'uploaded',   // stays 'uploaded' until user manually calculates
+      status:       'ai_analyzing',
     });
 
+    // Run AI analysis on the uploaded file
+    const filePath  = path.join(__dirname, '..', 'uploads', 'drawings', req.file.filename);
+    const aiResult  = await analyzeDrawingWithAI(filePath, type);
+
+    if (aiResult.success) {
+      drawing.aiExtracted           = aiResult.extracted;
+      drawing.aiClarifyingQuestions = aiResult.clarifyingQuestions || [];
+      drawing.aiConfidence          = aiResult.confidence;
+      drawing.aiNotes               = aiResult.notes;
+      drawing.status                = 'ai_done';
+    } else {
+      // AI failed — store the error, frontend will show manual fallback
+      drawing.aiError  = aiResult.message;
+      drawing.status   = 'uploaded';   // fall back to manual input state
+    }
+
+    await drawing.save();
     await drawing.populate(['project', 'uploadedBy']);
 
     res.status(201).json({
-      success:     true,
+      success:      true,
       drawing,
-      isRevision:  revision > 0,
+      isRevision:   revision > 0,
       revision,
-      prevInputs,  // previous revision's inputs so frontend can offer "reuse"
+      aiSuccess:    aiResult.success,
+      aiError:      aiResult.success ? null : aiResult.message,
+      aiReason:     aiResult.reason || null,
+      prevAiExtracted,  // for revision prefill
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -96,17 +116,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ── GET /api/drawings/:id/revisions — All revisions for same project+type ─────
+// ── GET /api/drawings/:id/revisions ──────────────────────────────────────────
 router.get('/:id/revisions', async (req, res) => {
   try {
     const drawing = await Drawing.findById(req.params.id);
     if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
 
-    // Find all drawings for same project+type, ordered by revision
-    const revisions = await Drawing.find({
-      project: drawing.project,
-      type:    drawing.type,
-    })
+    const revisions = await Drawing.find({ project: drawing.project, type: drawing.type })
       .populate('uploadedBy', 'name role')
       .sort('revision');
 
@@ -116,18 +132,23 @@ router.get('/:id/revisions', async (req, res) => {
   }
 });
 
-// ── POST /api/drawings/:id/calculate — User-triggered calculation ────────────
-// Body: { inputs: {...}, saveToRequirements: true|false }
-// When saveToRequirements is false (default): only previews — does NOT touch MaterialRequirements
-// When saveToRequirements is true: saves to MaterialRequirements (user confirmed)
+// ── POST /api/drawings/:id/calculate ─────────────────────────────────────────
+// Body: { answers: { fieldName: value, … }, saveToRequirements: bool }
+// 'answers' are the user's replies to clarifying questions.
+// They are merged with aiExtracted to form the final inputs object.
 router.post('/:id/calculate', async (req, res) => {
   try {
     const drawing = await Drawing.findById(req.params.id);
     if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
 
-    const inputs             = req.body.inputs || drawing.inputs || {};
     const saveToRequirements = req.body.saveToRequirements === true;
-    const materials          = calculateMaterials(drawing.type, inputs);
+
+    // Merge AI-extracted values with user answers (answers win on conflict)
+    const aiBase  = drawing.aiExtracted || {};
+    const answers = req.body.answers    || req.body.inputs || {};
+    const inputs  = { ...aiBase, ...answers };
+
+    const materials = calculateMaterials(drawing.type, inputs);
 
     drawing.inputs               = inputs;
     drawing.materialCalculations = materials;
@@ -157,32 +178,30 @@ router.post('/:id/calculate', async (req, res) => {
   }
 });
 
-// ── POST /api/drawings/:id/analyze — Re-analyze file (re-extract from file) ──
-router.post('/:id/analyze', async (req, res) => {
+// ── POST /api/drawings/:id/re-analyze — Re-run AI on the stored file ─────────
+router.post('/:id/re-analyze', async (req, res) => {
   try {
     const drawing = await Drawing.findById(req.params.id);
     if (!drawing) return res.status(404).json({ success: false, message: 'Drawing not found' });
 
-    const uploadsDir = path.join(__dirname, '..', 'uploads', 'drawings');
-    const fileName   = path.basename(drawing.fileUrl || '');
-    const filePath   = path.join(uploadsDir, fileName);
-    const analysis   = await analyzeDrawingFile(filePath, drawing.type);
+    const fileName = path.basename(drawing.fileUrl || '');
+    const filePath = path.join(__dirname, '..', 'uploads', 'drawings', fileName);
+    const aiResult = await analyzeDrawingWithAI(filePath, drawing.type);
 
-    if (analysis.inputs && Object.keys(analysis.inputs).length > 0) {
-      drawing.inputs = analysis.inputs;
-      await drawing.save();
+    if (aiResult.success) {
+      drawing.aiExtracted           = aiResult.extracted;
+      drawing.aiClarifyingQuestions = aiResult.clarifyingQuestions || [];
+      drawing.aiConfidence          = aiResult.confidence;
+      drawing.aiNotes               = aiResult.notes;
+      drawing.aiError               = null;
+      drawing.status                = 'ai_done';
+    } else {
+      drawing.aiError = aiResult.message;
+      drawing.status  = 'uploaded';
     }
+    await drawing.save();
 
-    res.json({
-      success: true,
-      analysis: {
-        format:     analysis.format,
-        confidence: analysis.confidence,
-        inputs:     analysis.inputs,
-        details:    analysis.details,
-        error:      analysis.error || null,
-      },
-    });
+    res.json({ success: true, drawing, aiSuccess: aiResult.success, aiError: aiResult.success ? null : aiResult.message });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -37,10 +37,12 @@ export default function DrawingUpload() {
     try {
       const res = await api.post('/drawings', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success(
-        res.data.isRevision
-          ? `Rev ${res.data.revision} uploaded — now enter inputs to calculate materials`
-          : '✅ Drawing uploaded — enter dimensions to calculate material quantities',
-        { duration: 4000 }
+        res.data.aiSuccess
+          ? `✅ Drawing read by AI — answer a few questions to finalize quantities`
+          : res.data.isRevision
+            ? `Rev ${res.data.revision} uploaded — enter data manually to calculate materials`
+            : '✅ Drawing uploaded — enter data to calculate material quantities',
+        { duration: 5000 }
       );
       navigate(`/drawings/${res.data.drawing._id}/calculate`);
     } catch (err) {
@@ -90,7 +92,7 @@ export default function DrawingUpload() {
 
         {/* File drop zone */}
         <div>
-          <label className="label">Drawing File * (PDF, DWG, PNG, JPG, DXF — max 20MB)</label>
+          <label className="label">Drawing File * (PDF, PNG, JPG — max 20MB · AI reads these automatically · DWG/DXF stored only)</label>
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
@@ -111,7 +113,7 @@ export default function DrawingUpload() {
               <>
                 <Upload size={32} className="text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-600 font-medium">Drop file here or click to browse</p>
-                <p className="text-gray-400 text-sm mt-1">PDF, DWG, PNG, JPG, DXF up to 20MB</p>
+                <p className="text-gray-400 text-sm mt-1">PDF · PNG · JPG (AI analyzed) · DWG · DXF (stored only)</p>
               </>
             )}
           </div>
@@ -124,7 +126,7 @@ export default function DrawingUpload() {
           <button type="button" onClick={() => navigate(-1)} className="btn-secondary">Cancel</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload size={16} />}
-            {loading ? 'Uploading...' : 'Upload Drawing'}
+            {loading ? 'Uploading & Reading Drawing…' : 'Upload Drawing'}
           </button>
         </div>
       </form>

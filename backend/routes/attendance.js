@@ -80,7 +80,7 @@ router.post('/', async (req, res) => {
 
     const record = await Attendance.findOneAndUpdate(
       { date, contractor: targetUser._id },
-      entry,
+      { $set: entry },
       { upsert: true, new: true }
     ).populate('project', 'name');
 

@@ -14,6 +14,7 @@ const contractorSchema = new mongoose.Schema({
   license: { type: String },
   experience: { type: Number }, // years
   projects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
+  dailyRate: { type: Number, default: 0 }, // ₹ per worker per day
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
